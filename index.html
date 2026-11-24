@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Test WebAR — Brayan Marín</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.158.0/examples/jsm/",
+        "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+      }
+    }
+  </script>
   <style>
     * { box-sizing: border-box; }
     html, body {
@@ -47,16 +56,24 @@
   <div id="container"></div>
 
   <script type="module">
-    import * as THREE from 'https://esm.sh/three@0.158.0';
-    import { MindARThree } from 'https://esm.sh/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
-
     const hud = document.getElementById('hud');
     const startScreen = document.getElementById('start-screen');
     const startBtn = document.getElementById('start-btn');
 
-    hud.textContent = 'LISTO PARA INICIAR';
+    let THREE, MindARThree;
+
+    try {
+      THREE = await import('three');
+      const mindarModule = await import('mindar-image-three');
+      MindARThree = mindarModule.MindARThree;
+      hud.textContent = 'LISTO PARA INICIAR';
+    } catch (e) {
+      hud.style.color = '#ff4444';
+      hud.textContent = 'FALLO AL CARGAR LIBRERÍA: ' + e.message;
+    }
 
     startBtn.addEventListener('click', async () => {
+      if (!MindARThree) return;
       startScreen.style.display = 'none';
       hud.textContent = 'PIDIENDO PERMISO DE CÁMARA...';
 
