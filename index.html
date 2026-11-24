@@ -85,10 +85,10 @@
       background-size: 3px 3px;
     }
 
-    /* Retícula arquitectónica sutil */
+    /* Retícula arquitectónica con margen libre sobre el badge de Netlify */
     .grid-frame {
       position: fixed;
-      inset: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)) 14px;
+      inset: max(14px, env(safe-area-inset-top)) 14px calc(max(14px, env(safe-area-inset-bottom)) + 52px) 14px;
       z-index: 3;
       pointer-events: none;
       border: 1px solid var(--line);
@@ -105,7 +105,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: calc(max(14px, env(safe-area-inset-top)) + 18px) 28px calc(max(14px, env(safe-area-inset-bottom)) + 22px);
+      padding: calc(max(14px, env(safe-area-inset-top)) + 18px) 28px calc(max(14px, env(safe-area-inset-bottom)) + 68px);
       transition: opacity 0.45s ease, transform 0.45s ease;
     }
 
@@ -180,7 +180,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 16px;
+      gap: 14px;
       margin: auto 0;
       will-change: transform;
     }
@@ -191,7 +191,7 @@
       justify-content: space-between;
       font-family: var(--font-mono);
       font-size: 10px;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.16em;
       color: var(--muted);
       text-transform: uppercase;
     }
@@ -201,12 +201,13 @@
       padding: 4px 0;
     }
 
+    /* Escala segura para Syne en 360px–390px sin recortar letras */
     .hero-title {
       margin: 0;
       font-family: var(--font-display);
       font-weight: 800;
-      font-size: clamp(2.65rem, 12.6vw, 7.6rem);
-      line-height: 0.88;
+      font-size: clamp(1.75rem, 8.2vw, 7.6rem);
+      line-height: 0.94;
       letter-spacing: -0.04em;
       text-transform: uppercase;
       background: linear-gradient(180deg, #ffffff 15%, #c7f9e2 68%, #00ff88 115%);
@@ -217,10 +218,10 @@
     }
 
     .hero-title-ghost {
-      margin: -6px 0 0;
+      margin: -4px 0 0;
       font-family: var(--font-display);
       font-weight: 800;
-      font-size: clamp(1.1rem, 4.4vw, 2.3rem);
+      font-size: clamp(1rem, 4.2vw, 2.3rem);
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: transparent;
@@ -241,7 +242,7 @@
       flex-direction: column;
       gap: 12px;
       border-top: 1px solid var(--line);
-      padding-top: 18px;
+      padding-top: 16px;
     }
 
     .btn-group {
@@ -252,10 +253,10 @@
 
     @media (min-width: 640px) {
       #landing-ui {
-        padding: 40px 56px;
+        padding: 40px 56px 76px;
       }
       .grid-frame {
-        inset: 22px;
+        inset: 22px 22px 60px 22px;
       }
       .btn-group {
         grid-template-columns: 1fr 1fr;
@@ -457,9 +458,10 @@
     .c-bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 6px; }
     .c-br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 6px; }
 
+    /* Pastilla HUD elevada para esquivar el badge de Netlify */
     #ar-hud {
       position: fixed;
-      bottom: calc(max(18px, env(safe-area-inset-bottom)) + 14px);
+      bottom: calc(max(18px, env(safe-area-inset-bottom)) + 56px);
       left: 50%;
       transform: translateX(-50%);
       z-index: 50;
@@ -689,19 +691,16 @@
 
             float t = uTime * mix(1.0, 0.15, uReducedMotion);
 
-            // Distorsión fluida reactiva al toque/cursor
             vec2 toPtr = uv - ptr;
             float dist = length(toPtr);
             float influence = exp(-dist * 3.2) * (0.14 + uVelocity * 0.45);
             vec2 warpedUv = uv * 1.55 - normalize(toPtr + 0.0001) * influence;
 
-            // Aberración cromática sutil en el campo procedural
             float chroma = 0.014 + influence * 0.16;
             float fR = field(warpedUv + vec2(chroma, 0.0), t);
             float fG = field(warpedUv, t);
             float fB = field(warpedUv - vec2(chroma, 0.0), t);
 
-            // Paleta editorial experimental: obsidiana + violeta espacial + verde neón
             vec3 colObsidian = vec3(0.02, 0.025, 0.032);
             vec3 colViolet   = vec3(0.16, 0.07, 0.34);
             vec3 colNeon     = vec3(0.0, 1.0, 0.53);
@@ -714,17 +713,14 @@
             vec3 color = colObsidian;
             color = mix(color, colViolet, smoothstep(0.15, 0.85, nB) * 0.72);
 
-            // Filamentos luminosos de refracción
             float ridge = 1.0 - abs(fG * 2.2);
             ridge = pow(clamp(ridge, 0.0, 1.0), 4.0);
             color += colNeon * ridge * (0.34 + influence * 1.1);
             color += colSilver * pow(clamp(nR * nG, 0.0, 1.0), 3.0) * 0.22;
 
-            // Halo sutil donde toca el usuario
             float touchGlow = exp(-dist * 4.5) * 0.22;
             color += colNeon * touchGlow;
 
-            // Viñeta cinematográfica para legibilidad máxima del texto
             float vig = smoothstep(1.25, 0.2, length((vUv - 0.5) * vec2(1.15, 1.0)));
             color *= mix(0.45, 1.0, vig);
 
@@ -779,7 +775,6 @@
             pos.y += sin(uTime * 0.45 + aPhase) * 0.18;
             pos.x += cos(uTime * 0.35 + aPhase * 1.3) * 0.14;
 
-            // Parallax y ligera repulsión ante el puntero
             vec2 delta = pos.xy - uPointer * 2.1;
             float d = length(delta);
             pos.xy += normalize(delta + 0.001) * exp(-d * 1.8) * 0.22;
@@ -851,7 +846,6 @@
         particleUniforms.uTime.value = prefersReducedMotion ? elapsed * 0.15 : elapsed;
         particleUniforms.uPointer.value.set((pointer.x - 0.5) * 2.0, (pointer.y - 0.5) * 2.0);
 
-        // Parallax sutil de la composición tipográfica
         if (!prefersReducedMotion && heroParallax) {
           const px = (pointer.x - 0.5) * -10;
           const py = (pointer.y - 0.5) * 8;
@@ -883,13 +877,19 @@
     /* =========================================================================
        2. ENTRADA CINEMATOGRÁFICA CON GSAP
     ========================================================================= */
-    window.addEventListener('DOMContentLoaded', () => {
+    function runIntro() {
       if (prefersReducedMotion || typeof window.gsap === 'undefined') return;
 
       const tl = window.gsap.timeline({ defaults: { ease: 'expo.out' } });
       tl.from('.anim-reveal', { yPercent: 115, opacity: 0, duration: 1.25, delay: 0.1 })
         .from('.anim-fade', { y: 18, opacity: 0, duration: 0.9, stagger: 0.1 }, '-=0.85');
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', runIntro);
+    } else {
+      runIntro();
+    }
 
     /* =========================================================================
        3. INTEGRACIÓN REAL DE WEBAR (MindAR + Three.js con ./targets.mind)
@@ -905,7 +905,6 @@
     let activeMindAR = null;
     let MindARThreeClass = null;
 
-    // Constructor de artefactos 3D experimentales (reemplazables por .glb o VideoTexture)
     function createArtifact(accentHex, coreHex) {
       const group = new THREE.Group();
 
@@ -942,7 +941,6 @@
       arHud.style.color = '#00ff88';
       arHud.textContent = 'CARGANDO MOTOR WEBAR...';
 
-      // Liberamos la GPU del fondo WebGL mientras corre la cámara AR
       if (window.__pauseLandingBg) window.__pauseLandingBg();
 
       try {
