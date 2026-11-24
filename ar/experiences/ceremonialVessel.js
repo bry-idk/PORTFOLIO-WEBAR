@@ -240,6 +240,37 @@ export function createCeremonialVesselExperience(THREE) {
     { srgb: true }
   );
 
+  const vesselRoughness = createCanvasTexture(
+    THREE,
+    1024,
+    1024,
+    (ctx, w, h) => {
+      // Base metalica satinada (~0.28)
+      ctx.fillStyle = '#4a4a4a';
+      ctx.fillRect(0, 0, w, h);
+
+      // Bandas ligeramente mas pulidas en relieve
+      for (let y = 0; y < h; y += 3) {
+        const v = y % 6 === 0 ? 38 : 74;
+        ctx.fillStyle = `rgba(${v},${v},${v},0.35)`;
+        ctx.fillRect(0, y, w, 2);
+      }
+
+      // Surcos tallados mate (~0.78) para contraste real entre metal bruñido y ceramica grabada
+      ctx.strokeStyle = '#c8c8c8';
+      ctx.lineWidth = 9;
+      const bandY1 = h * 0.36;
+      const bandY2 = h * 0.56;
+      [bandY1 - 28, bandY1 + 28, bandY2 - 34, bandY2 + 34].forEach((by) => {
+        ctx.beginPath();
+        ctx.moveTo(0, by);
+        ctx.lineTo(w, by);
+        ctx.stroke();
+      });
+    },
+    { srgb: false }
+  );
+
   /* =========================================================================
      3. VASIJA HERO (LATHEGEOMETRY CON GROSOR REAL) + AURA FRESNEL GLSL
   ========================================================================= */
@@ -280,15 +311,16 @@ export function createCeremonialVesselExperience(THREE) {
   const vesselMat = new THREE.MeshPhysicalMaterial({
     map: vesselAlbedo,
     bumpMap: vesselBump,
-    bumpScale: 0.008,
+    bumpScale: 0.009,
+    roughnessMap: vesselRoughness,
     emissiveMap: vesselEmissive,
     emissive: new THREE.Color(0xffb433),
-    emissiveIntensity: 0.9,
-    metalness: 0.86,
-    roughness: 0.27,
-    clearcoat: 0.36,
-    clearcoatRoughness: 0.22,
-    envMapIntensity: 1.35
+    emissiveIntensity: 0.95,
+    metalness: 0.88,
+    roughness: 1.0,
+    clearcoat: 0.4,
+    clearcoatRoughness: 0.2,
+    envMapIntensity: 1.45
   });
   const vesselMesh = new THREE.Mesh(vesselGeo, vesselMat);
   vesselMesh.castShadow = true;
@@ -328,11 +360,15 @@ export function createCeremonialVesselExperience(THREE) {
 
       void main() {
         float ndotv = abs(dot(normalize(vNormalView), normalize(vViewDir)));
-        float fresnel = pow(1.0 - ndotv, 2.6);
-        float shimmer = 0.8 + 0.35 * fbm2D(vec2(vUv.x * 6.0 + uTime * 0.18, vUv.y * 5.0 - uTime * 0.28));
+        float fresnel = pow(1.0 - ndotv, 2.5);
+        float shimmer = 0.82 + 0.32 * fbm2D(vec2(vUv.x * 6.0 + uTime * 0.18, vUv.y * 5.0 - uTime * 0.28));
+        // Onda de escaneo ceremonial ascendente (interaccion museografica Proyecto ALFAR)
+        float scanPos = fract(uTime * 0.26);
+        float scanBand = exp(-abs(fract(vUv.y) - scanPos) * 24.0) * 0.65;
         float pulse = 0.88 + 0.12 * sin(uTime * 2.2);
-        float alpha = fresnel * shimmer * pulse * 0.92 * uReveal;
-        gl_FragColor = vec4(uColor * (1.1 + fresnel * 0.5), alpha);
+        float alpha = (fresnel * shimmer * pulse + scanBand * (0.35 + fresnel)) * 0.92 * uReveal;
+        vec3 col = mix(uColor * (1.1 + fresnel * 0.5), vec3(1.0, 0.96, 0.78), scanBand);
+        gl_FragColor = vec4(col, alpha);
       }
     `,
     transparent: true,
@@ -431,6 +467,84 @@ export function createCeremonialVesselExperience(THREE) {
   plinthMesh.position.y = -0.018;
   plinthMesh.receiveShadow = true;
   stage.add(plinthMesh);
+
+  // Bisel metalico dorado alrededor del borde del pedestal
+  const plinthRim = new THREE.Mesh(
+    new THREE.TorusGeometry(0.28, 0.0045, 8, 48),
+    new THREE.MeshStandardMaterial({
+      color: 0xe6b44c,
+      emissive: 0x3b2204,
+      emissiveIntensity: 0.35,
+      metalness: 0.9,
+      roughness: 0.22
+    })
+  );
+  plinthRim.rotation.x = Math.PI / 2;
+  plinthRim.position.y = 0.0;
+  stage.add(plinthRim);
+
+  // Halo de contraluz volumetrico borgona-dorado detras de la pieza
+  const backHaloGeo = new THREE.PlaneGeometry(0.56, 0.56);
+  const backHaloMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uReveal: { value: 0 }
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uReveal;
+      varying vec2 vUv;
+      ${GLSL_NOISE}
+
+      void main() {
+        vec2 p = (vUv - 0.5) * 2.0;
+        float r = length(p);
+        float n = fbm2D(vUv * 4.0 + vec2(uTime * 0.08, -uTime * 0.06));
+        float glow = exp(-r * 2.6) * (0.75 + 0.35 * n);
+        vec3 col = mix(vec3(0.68, 0.14, 0.28), vec3(1.0, 0.72, 0.24), exp(-r * 3.8));
+        float edge = smoothstep(1.0, 0.45, r);
+        gl_FragColor = vec4(col, glow * edge * 0.55 * uReveal);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+  const backHalo = new THREE.Mesh(backHaloGeo, backHaloMat);
+  backHalo.position.set(0, 0.27, -0.14);
+  stage.add(backHalo);
+
+  // 14 fragmentos / esquirlas ceremoniales doradas orbitando lentamente
+  const shardGeo = new THREE.OctahedronGeometry(0.011, 0);
+  const shardMat = new THREE.MeshStandardMaterial({
+    color: 0xffd369,
+    emissive: 0x804406,
+    emissiveIntensity: 0.45,
+    metalness: 0.9,
+    roughness: 0.2
+  });
+  const shards = [];
+  for (let i = 0; i < 14; i++) {
+    const s = new THREE.Mesh(shardGeo, shardMat);
+    s.userData = {
+      ang: (i / 14) * Math.PI * 2,
+      rad: 0.19 + rand() * 0.09,
+      yBase: 0.12 + rand() * 0.32,
+      speed: (i % 2 === 0 ? 1 : -1) * (0.25 + rand() * 0.25),
+      scale: 0.65 + rand() * 0.75
+    };
+    s.scale.set(s.userData.scale, s.userData.scale * 1.45, s.userData.scale * 0.7);
+    stage.add(s);
+    shards.push(s);
+  }
 
   // Dos anillos de filamentos energeticos orbitando la vasija
   const energyRingMat = new THREE.ShaderMaterial({
@@ -628,6 +742,8 @@ export function createCeremonialVesselExperience(THREE) {
 
     auraMat.uniforms.uTime.value = elapsed;
     auraMat.uniforms.uReveal.value = rev;
+    backHaloMat.uniforms.uTime.value = elapsed;
+    backHaloMat.uniforms.uReveal.value = rev;
     innerGlowMat.uniforms.uTime.value = elapsed;
     innerGlowMat.uniforms.uReveal.value = rev;
     energyRingMat.uniforms.uTime.value = elapsed;
@@ -636,6 +752,18 @@ export function createCeremonialVesselExperience(THREE) {
     vortexMat.uniforms.uReveal.value = rev;
     dustMat.uniforms.uTime.value = elapsed;
     dustMat.uniforms.uReveal.value = rev;
+
+    for (const s of shards) {
+      const { ang, rad, yBase, speed } = s.userData;
+      const a = ang + elapsed * speed;
+      s.position.set(
+        Math.cos(a) * rad,
+        yBase + Math.sin(elapsed * 1.6 + ang) * 0.016,
+        Math.sin(a) * rad
+      );
+      s.rotation.x = elapsed * 0.9 + ang;
+      s.rotation.y = elapsed * 1.2;
+    }
 
     // Orbitas de las luces dinamicas para reflejos vivos sobre el oro
     orbitLightGold.position.set(

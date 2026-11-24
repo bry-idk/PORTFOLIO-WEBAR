@@ -100,8 +100,60 @@ export function createSoftGlowTexture(THREE, size = 128) {
 }
 
 /**
+ * Textura procedural de destello estelar de 4 puntas con nucleo brillante.
+ */
+export function createStarFlareTexture(THREE, size = 128) {
+  return createCanvasTexture(
+    THREE,
+    size,
+    size,
+    (ctx, w, h) => {
+      const cx = w * 0.5;
+      const cy = h * 0.5;
+
+      const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, cx * 0.42);
+      core.addColorStop(0.0, 'rgba(255,255,255,1.0)');
+      core.addColorStop(0.25, 'rgba(255,255,255,0.75)');
+      core.addColorStop(0.65, 'rgba(255,255,255,0.12)');
+      core.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+      ctx.fillStyle = core;
+      ctx.fillRect(0, 0, w, h);
+
+      // Rayo horizontal
+      const hGrad = ctx.createLinearGradient(0, cy, w, cy);
+      hGrad.addColorStop(0.0, 'rgba(255,255,255,0.0)');
+      hGrad.addColorStop(0.35, 'rgba(255,255,255,0.28)');
+      hGrad.addColorStop(0.5, 'rgba(255,255,255,0.95)');
+      hGrad.addColorStop(0.65, 'rgba(255,255,255,0.28)');
+      hGrad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+      ctx.fillStyle = hGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, w * 0.48, h * 0.045, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rayo vertical
+      const vGrad = ctx.createLinearGradient(cx, 0, cx, h);
+      vGrad.addColorStop(0.0, 'rgba(255,255,255,0.0)');
+      vGrad.addColorStop(0.35, 'rgba(255,255,255,0.28)');
+      vGrad.addColorStop(0.5, 'rgba(255,255,255,0.95)');
+      vGrad.addColorStop(0.65, 'rgba(255,255,255,0.28)');
+      vGrad.addColorStop(1.0, 'rgba(255,255,255,0.0)');
+      ctx.fillStyle = vGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, w * 0.045, h * 0.48, 0, 0, Math.PI * 2);
+      ctx.fill();
+    },
+    {
+      srgb: true,
+      wrapS: THREE.ClampToEdgeWrapping,
+      wrapT: THREE.ClampToEdgeWrapping
+    }
+  );
+}
+
+/**
  * Genera un Environment Map procedural usando PMREMGenerator para reflejos PBR reales
- * (oro, ceramica, vidrio CRT, obsidiana) sin depender de HDRI externos.
+ * (oro, ceramica, vidrio CRT, obsidiana) con 6 paneles luminosos equilibrados.
  */
 export function createStudioEnvMap(THREE, renderer) {
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -117,14 +169,18 @@ export function createStudioEnvMap(THREE, renderer) {
   envScene.add(room);
 
   const panels = [
-    // Panel calido oro arriba-izquierda (key light reflection)
-    { pos: [-6, 5.5, 4.5], rot: [0.45, 0.65, 0], scale: [6.5, 4.2, 0.2], color: [3.2, 2.55, 1.55] },
-    // Panel frio cian derecha (rim reflection)
-    { pos: [6.8, 2.2, 2.8], rot: [0.15, -1.1, 0], scale: [5.0, 6.0, 0.2], color: [1.1, 2.35, 3.0] },
-    // Panel amatista trasero-superior
-    { pos: [0.5, 6.0, -6.5], rot: [0.7, 0, 0], scale: [8.0, 3.5, 0.2], color: [1.9, 1.05, 3.1] },
-    // Rebote calido inferior
-    { pos: [0, -6.5, 2.0], rot: [-1.2, 0, 0], scale: [9.0, 9.0, 0.2], color: [0.95, 0.62, 0.35] }
+    // 1. Key calido oro arriba-izquierda
+    { pos: [-6, 5.5, 4.5], rot: [0.45, 0.65, 0], scale: [6.5, 4.2, 0.2], color: [3.4, 2.65, 1.55] },
+    // 2. Rim frio cian derecha
+    { pos: [6.8, 2.2, 2.8], rot: [0.15, -1.1, 0], scale: [5.0, 6.0, 0.2], color: [1.15, 2.55, 3.2] },
+    // 3. Contraluz amatista trasero-superior
+    { pos: [0.5, 6.0, -6.5], rot: [0.7, 0, 0], scale: [8.0, 3.5, 0.2], color: [2.05, 1.05, 3.25] },
+    // 4. Acento carmesi suave lateral-trasero izquierdo
+    { pos: [-6.5, 1.4, -4.2], rot: [0.2, 1.05, 0], scale: [4.8, 4.4, 0.2], color: [2.4, 0.58, 0.95] },
+    // 5. Techo frio difuso
+    { pos: [0, 8.2, 0.8], rot: [1.57, 0, 0], scale: [7.5, 6.5, 0.2], color: [1.0, 1.25, 1.65] },
+    // 6. Rebote calido inferior
+    { pos: [0, -6.5, 2.0], rot: [-1.2, 0, 0], scale: [9.0, 9.0, 0.2], color: [1.05, 0.68, 0.36] }
   ];
 
   const panelGeo = new THREE.BoxGeometry(1, 1, 1);

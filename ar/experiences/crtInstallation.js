@@ -141,6 +141,73 @@ export function createCRTInstallationExperience(THREE) {
   crossBar.position.set(-0.06, 0.23, -0.10);
   stage.add(crossBar);
 
+  // Tiras de iluminacion inteligente (Smart Lighting) en bordes del plinto y rack
+  const smartLedMatA = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.9 });
+  const smartLedMatB = new THREE.MeshBasicMaterial({ color: 0xff2a9d, transparent: true, opacity: 0.9 });
+  const stripFront = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.006, 0.006), smartLedMatA);
+  stripFront.position.set(0, 0.002, 0.228);
+  const stripRack = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.004, 0.005), smartLedMatB);
+  stripRack.position.set(-0.06, 0.238, -0.095);
+  const stripLeft = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.006, 0.44), smartLedMatB);
+  stripLeft.position.set(-0.378, 0.002, 0);
+  const stripRight = new THREE.Mesh(new THREE.BoxGeometry(0.006, 0.006, 0.44), smartLedMatA);
+  stripRight.position.set(0.378, 0.002, 0);
+  stage.add(stripFront, stripRack, stripLeft, stripRight);
+
+  // Modulos mecanicos animados (engranajes + pistones lineales de REMINISCENCIA)
+  const knobMat = new THREE.MeshStandardMaterial({
+    color: 0x9aa2b4,
+    roughness: 0.28,
+    metalness: 0.85
+  });
+  const brassMechMat = new THREE.MeshStandardMaterial({
+    color: 0xb89658,
+    roughness: 0.28,
+    metalness: 0.88
+  });
+  const gears = [];
+  function createGear(radius, teeth, mat) {
+    const g = new THREE.Group();
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(radius, radius * 0.18, 8, 24), mat);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.28, radius * 0.28, radius * 0.35, 12), mat);
+    hub.rotation.x = Math.PI / 2;
+    g.add(rim, hub);
+    const toothGeo = new THREE.BoxGeometry(radius * 0.24, radius * 0.32, radius * 0.28);
+    for (let i = 0; i < teeth; i++) {
+      const a = (i / teeth) * Math.PI * 2;
+      const tooth = new THREE.Mesh(toothGeo, mat);
+      tooth.position.set(Math.cos(a) * (radius + radius * 0.16), Math.sin(a) * (radius + radius * 0.16), 0);
+      tooth.rotation.z = a + Math.PI / 2;
+      g.add(tooth);
+    }
+    return g;
+  }
+
+  const gearSpecs = [
+    { x: -0.02, y: 0.145, z: -0.055, r: 0.032, t: 10, dir: 1, mat: knobMat },
+    { x: 0.035, y: 0.185, z: -0.055, r: 0.022, t: 8, dir: -1.45, mat: brassMechMat },
+    { x: -0.072, y: 0.175, z: -0.055, r: 0.024, t: 8, dir: -1.35, mat: brassMechMat }
+  ];
+  for (const gs of gearSpecs) {
+    const gear = createGear(gs.r, gs.t, gs.mat);
+    gear.position.set(gs.x, gs.y, gs.z);
+    gear.userData.dir = gs.dir;
+    stage.add(gear);
+    gears.push(gear);
+  }
+
+  // Dos actuadores / pistones lineales en el soporte derecho
+  const pistons = [];
+  [0.145, 0.175].forEach((px, idx) => {
+    const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.009, 0.075, 10), metalRackMat);
+    sleeve.position.set(px, 0.075, -0.07);
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.085, 8), knobMat);
+    rod.position.set(px, 0.12, -0.07);
+    rod.userData = { baseY: 0.12, phase: idx * Math.PI };
+    stage.add(sleeve, rod);
+    pistons.push(rod);
+  });
+
   // Cables de señal conectados entre los televisores y la base
   const cableMat = new THREE.MeshStandardMaterial({
     color: 0x101218,
@@ -299,27 +366,41 @@ export function createCRTInstallationExperience(THREE) {
           return col;
         }
 
-        // Canal 3: Topografia cibernetica & cortes de glitch magenta-ambar
+        // Canal 3: Pasillo liminal arquitectonico + baldosas hexagonales + glitch (guiño a target4.png)
         vec3 channelCyberTopo(vec2 uv, float t) {
-          // Desplazamiento horizontal en rebanadas
-          float sliceSeed = floor(uv.y * 14.0);
-          float glitchGate = step(0.78, hash21(vec2(sliceSeed, floor(t * 5.5))));
-          uv.x += (hash21(vec2(sliceSeed, t * 2.0)) - 0.5) * 0.18 * glitchGate;
+          float sliceSeed = floor(uv.y * 16.0);
+          float glitchGate = step(0.80, hash21(vec2(sliceSeed, floor(t * 5.2))));
+          uv.x += (hash21(vec2(sliceSeed, t * 2.1)) - 0.5) * 0.16 * glitchGate;
 
-          float n = fbm2D(vec2(uv.x * 4.5 + t * 0.18, uv.y * 4.5 - t * 0.22));
-          float contour = abs(fract(n * 9.0) - 0.5);
-          float line = smoothstep(0.14, 0.02, contour);
+          vec2 p = uv - 0.5;
+          float ax = max(abs(p.x), 0.025);
+          float ay = max(abs(p.y), 0.025);
 
-          float scanRing = abs(length(uv - 0.5) - fract(t * 0.38) * 0.75);
-          float pulseRing = smoothstep(0.035, 0.0, scanRing);
+          // Perspectiva de corredor arquitectonico
+          float isFloor = step(abs(p.x) * 0.85, -p.y);
+          float isWall = step(abs(p.y) * 1.15, abs(p.x));
+          float depth = 0.24 / max(max(ax * 0.9, ay), 0.03);
 
-          vec3 bg = vec3(0.05, 0.015, 0.07);
-          vec3 mag = vec3(1.0, 0.16, 0.56);
-          vec3 amb = vec3(1.0, 0.72, 0.22);
-          vec3 lineCol = mix(mag, amb, smoothstep(0.35, 0.75, n));
+          // Baldosas en suelo y scanlines en muros
+          vec2 floorUv = vec2(p.x / max(-p.y, 0.04) * 3.0, depth * 2.4 - t * 0.9);
+          float hexTile = smoothstep(0.08, 0.16, abs(fract(floorUv.x) - 0.5)) *
+                          smoothstep(0.08, 0.16, abs(fract(floorUv.y) - 0.5));
+          float wallLines = 0.55 + 0.45 * sin(uv.y * 120.0 + depth * 2.0);
 
-          vec3 col = bg + lineCol * line * 1.15 + vec3(0.25, 0.95, 1.0) * pulseRing * 0.85;
-          return col;
+          vec3 warmWall = vec3(0.55, 0.46, 0.34) * wallLines;
+          vec3 warmFloor = mix(vec3(0.18, 0.11, 0.06), vec3(0.72, 0.50, 0.24), hexTile);
+          vec3 hall = mix(warmWall, warmFloor, isFloor);
+          hall = mix(hall, vec3(0.32, 0.28, 0.22), (1.0 - isFloor) * (1.0 - isWall));
+
+          // Portal de luz blanca-cyan al fondo del corredor + acento cyber
+          float portal = exp(-length(p) * 6.5);
+          vec3 portalCol = mix(vec3(1.0, 0.96, 0.88), vec3(0.25, 0.95, 1.0), 0.35 + 0.35 * sin(t * 1.6));
+          hall += portalCol * portal * 1.3;
+
+          // Pulso sutil de contorno magenta-cyan en glitches
+          float n = fbm2D(uv * 5.0 + t * 0.2);
+          hall = mix(hall, vec3(1.0, 0.2, 0.65) * n * 1.4, glitchGate * 0.45);
+          return hall;
         }
 
         vec3 sampleChannel(vec2 uv, float t, float ch) {
@@ -392,11 +473,6 @@ export function createCRTInstallationExperience(THREE) {
     roughness: 0.36,
     metalness: 0.5
   });
-  const knobMat = new THREE.MeshStandardMaterial({
-    color: 0x9aa2b4,
-    roughness: 0.28,
-    metalness: 0.85
-  });
 
   // Geometria de pantalla curvada reutilizable
   const screenW = 0.165;
@@ -412,6 +488,42 @@ export function createCRTInstallationExperience(THREE) {
   curvedScreenGeo.computeVertexNormals();
 
   const screenMaterials = [];
+  const beamGeo = new THREE.CylinderGeometry(0.125, 0.075, 0.14, 16, 1, true);
+  beamGeo.rotateX(Math.PI / 2);
+  beamGeo.translate(0, 0, 0.07);
+
+  function createScreenBeamMaterial(colorHex) {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uReveal: { value: 0 },
+        uColor: { value: new THREE.Color(colorHex) }
+      },
+      vertexShader: /* glsl */ `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform float uTime;
+        uniform float uReveal;
+        uniform vec3 uColor;
+        varying vec2 vUv;
+        void main() {
+          float fade = smoothstep(0.0, 0.22, vUv.y) * smoothstep(1.0, 0.08, vUv.y);
+          float pulse = 0.78 + 0.22 * sin(uTime * 4.5 + vUv.x * 6.0);
+          gl_FragColor = vec4(uColor, fade * pulse * 0.095 * uReveal);
+        }
+      `,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+  }
+  const beamMaterials = [];
 
   function createCRTUnit(channelIdx, ledColorHex) {
     const tv = new THREE.Group();
@@ -445,6 +557,16 @@ export function createCRTInstallationExperience(THREE) {
       tv.add(vent);
     }
 
+    // Antenas telescopicas en la unidad superior central
+    if (channelIdx === 2) {
+      [-1, 1].forEach((side) => {
+        const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.0012, 0.0024, 0.13, 6), knobMat);
+        ant.position.set(side * 0.035, 0.145, -0.01);
+        ant.rotation.z = side * -0.42;
+        tv.add(ant);
+      });
+    }
+
     // Perillas rotatorias analogicas + rejilla de parlante en panel derecho
     const knobGeo = new THREE.CylinderGeometry(0.011, 0.012, 0.014, 14);
     knobGeo.rotateX(Math.PI / 2);
@@ -466,6 +588,13 @@ export function createCRTInstallationExperience(THREE) {
     const screen = new THREE.Mesh(curvedScreenGeo, screenMat);
     screen.position.set(-0.016, 0.002, 0.063);
     tv.add(screen);
+
+    // Cono de proyeccion luminosa suave emanando de la pantalla
+    const beamMat = createScreenBeamMaterial(ledColorHex);
+    beamMaterials.push(beamMat);
+    const beam = new THREE.Mesh(beamGeo, beamMat);
+    beam.position.set(-0.016, 0.002, 0.068);
+    tv.add(beam);
 
     return tv;
   }
@@ -572,8 +701,26 @@ export function createCRTInstallationExperience(THREE) {
       mat.uniforms.uTime.value = elapsed;
       mat.uniforms.uReveal.value = rev;
     }
+    for (const bm of beamMaterials) {
+      bm.uniforms.uTime.value = elapsed;
+      bm.uniforms.uReveal.value = rev;
+    }
     sparkMat.uniforms.uTime.value = elapsed;
     sparkMat.uniforms.uReveal.value = rev;
+
+    // Engranajes y actuadores mecanicos en movimiento sincronizado
+    for (const gear of gears) {
+      gear.rotation.z = elapsed * 0.9 * gear.userData.dir;
+    }
+    for (const rod of pistons) {
+      rod.position.y = rod.userData.baseY + Math.sin(elapsed * 2.2 + rod.userData.phase) * 0.022;
+    }
+
+    // Iluminacion inteligente dinamica en tiras LED
+    smartLedMatA.color.setHSL((0.52 + Math.sin(elapsed * 0.35) * 0.12 + 1) % 1, 0.95, 0.56);
+    smartLedMatB.color.setHSL((0.90 + Math.cos(elapsed * 0.42) * 0.12 + 1) % 1, 0.95, 0.58);
+    smartLedMatA.opacity = (0.6 + 0.35 * Math.sin(elapsed * 3.5)) * rev;
+    smartLedMatB.opacity = (0.6 + 0.35 * Math.cos(elapsed * 3.1)) * rev;
 
     // Micro flotacion sutil de los monitores superiores para dar sensacion de instalacion viva
     crtUnits[2].position.y = crtUnits[2].userData.baseY + Math.sin(elapsed * 1.2) * 0.005;

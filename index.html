@@ -187,11 +187,13 @@
 
     .hero-tag-row {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
+      gap: 8px 12px;
       font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.16em;
+      font-size: clamp(9px, 2.4vw, 10.5px);
+      letter-spacing: 0.14em;
       color: var(--muted);
       text-transform: uppercase;
     }
@@ -247,8 +249,12 @@
 
     .btn-group {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 11px;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .btn-group .cta-primary {
+      grid-column: 1 / -1;
     }
 
     @media (min-width: 640px) {
@@ -259,8 +265,12 @@
         inset: 22px 22px 60px 22px;
       }
       .btn-group {
-        grid-template-columns: 1fr 1fr;
-        max-width: 560px;
+        grid-template-columns: 1.15fr 1fr 1fr;
+        max-width: 760px;
+        gap: 11px;
+      }
+      .btn-group .cta-primary {
+        grid-column: auto;
       }
     }
 
@@ -269,14 +279,14 @@
       display: inline-flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 8px;
       width: 100%;
-      padding: 16px 20px;
+      padding: 13px 15px;
       border-radius: 999px;
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       text-decoration: none;
       cursor: pointer;
@@ -285,6 +295,15 @@
                   box-shadow 0.25s ease,
                   background-color 0.25s ease,
                   border-color 0.25s ease;
+    }
+
+    @media (min-width: 640px) {
+      .cta-btn {
+        gap: 12px;
+        padding: 15px 18px;
+        font-size: 11.5px;
+        letter-spacing: 0.12em;
+      }
     }
 
     .cta-btn:active {
@@ -349,8 +368,161 @@
       color: rgba(244, 246, 244, 0.42);
     }
 
+    /* ================= MODAL SELECTOR DE ESCENAS 3D (SIN AR) ================= */
+    #showcase-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(5, 6, 9, 0.84);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      opacity: 0;
+      transition: opacity 0.28s ease;
+    }
+
+    #showcase-modal.is-open {
+      display: flex;
+      opacity: 1;
+    }
+
+    .showcase-dialog {
+      width: min(760px, 100%);
+      max-height: 84dvh;
+      overflow-y: auto;
+      background: rgba(12, 14, 20, 0.92);
+      border: 1px solid rgba(244, 246, 244, 0.16);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72);
+    }
+
+    .showcase-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .showcase-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .showcase-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1rem, 3.5vw, 1.35rem);
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+
+    .modal-close-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1px solid rgba(244, 246, 244, 0.22);
+      background: rgba(244, 246, 244, 0.06);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .modal-close-btn:hover {
+      border-color: var(--accent);
+      background: rgba(0, 255, 136, 0.14);
+    }
+
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 600px) {
+      .showcase-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .showcase-card:first-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .showcase-card {
+      position: relative;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(244, 246, 244, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--ink);
+      cursor: pointer;
+      transition: transform 0.22s ease, border-color 0.22s ease, background-color 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .showcase-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--card-accent, var(--accent));
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    }
+
+    .showcase-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--card-accent, var(--accent));
+    }
+
+    .showcase-card-name {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .showcase-card-sub {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .showcase-card-teaser {
+      margin: 2px 0 0;
+      font-size: 12.5px;
+      line-height: 1.42;
+      color: rgba(244, 246, 244, 0.72);
+    }
+
     /* ================= CAPA DE REALIDAD AUMENTADA (MindAR) ================= */
     #ar-layer {
+      --ar-accent: #00ff88;
+      --ar-secondary: #7c3aed;
       position: fixed;
       inset: 0;
       z-index: 40;
@@ -384,6 +556,64 @@
       object-fit: cover !important;
     }
 
+    /* Efectos atmosfericos tematicos en la UI segun el target activo */
+    #ar-ui-fx {
+      position: fixed;
+      inset: 0;
+      z-index: 44;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
+
+    #ar-layer[data-ar-theme="spatial"] #ar-ui-fx,
+    #ar-layer[data-ar-theme="japanese"] #ar-ui-fx,
+    #ar-layer[data-ar-theme="forest"] #ar-ui-fx,
+    #ar-layer[data-ar-theme="crt"] #ar-ui-fx,
+    #ar-layer[data-ar-theme="vessel"] #ar-ui-fx {
+      opacity: 1;
+    }
+
+    #ar-layer[data-ar-theme="crt"] #ar-ui-fx {
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(0, 229, 255, 0.03) 0px,
+          rgba(0, 229, 255, 0.03) 1px,
+          transparent 1px,
+          transparent 3px
+        ),
+        radial-gradient(circle at 50% 50%, transparent 56%, rgba(0, 229, 255, 0.14) 86%, rgba(255, 42, 157, 0.2) 100%);
+    }
+
+    #ar-layer[data-ar-theme="vessel"] #ar-ui-fx {
+      background:
+        radial-gradient(circle at 50% 45%, transparent 52%, rgba(245, 184, 65, 0.12) 82%, rgba(160, 28, 56, 0.28) 100%);
+      box-shadow: inset 0 0 0 1px rgba(245, 184, 65, 0.2);
+    }
+
+    #ar-layer[data-ar-theme="japanese"] #ar-ui-fx {
+      background:
+        radial-gradient(circle at 50% 15%, rgba(255, 59, 127, 0.18) 0%, transparent 58%),
+        radial-gradient(circle at 50% 50%, transparent 58%, rgba(20, 8, 22, 0.42) 100%);
+    }
+
+    #ar-layer[data-ar-theme="forest"] #ar-ui-fx {
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 209, 102, 0.2) 0%, transparent 48%),
+        radial-gradient(circle at 80% 85%, rgba(74, 222, 128, 0.14) 0%, transparent 52%);
+    }
+
+    #ar-layer[data-ar-theme="spatial"] #ar-ui-fx {
+      background:
+        radial-gradient(circle at 50% 50%, transparent 58%, rgba(168, 85, 247, 0.16) 86%, rgba(0, 255, 136, 0.12) 100%);
+      background-image:
+        radial-gradient(circle at 50% 50%, transparent 58%, rgba(168, 85, 247, 0.16) 86%, rgba(0, 255, 136, 0.12) 100%),
+        linear-gradient(rgba(168, 85, 247, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168, 85, 247, 0.04) 1px, transparent 1px);
+      background-size: 100% 100%, 38px 38px, 38px 38px;
+    }
+
     .ar-topbar {
       position: fixed;
       top: calc(max(14px, env(safe-area-inset-top)) + 8px);
@@ -393,6 +623,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
     }
 
     .ar-exit-btn {
@@ -411,22 +642,86 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       cursor: pointer;
+      transition: border-color 0.22s ease, transform 0.2s ease;
+    }
+
+    .ar-exit-btn:hover {
+      border-color: var(--ar-accent);
+      transform: translateY(-1px);
     }
 
     .ar-badge {
       padding: 8px 12px;
       border-radius: 999px;
       background: rgba(5, 6, 7, 0.72);
-      border: 1px solid rgba(0, 255, 136, 0.35);
-      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--ar-accent) 45%, transparent);
+      color: var(--ar-accent);
       font-family: var(--font-mono);
       font-size: 10px;
       letter-spacing: 0.14em;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
+      transition: color 0.3s ease, border-color 0.3s ease;
     }
 
-    /* Retícula minimalista de escaneo AR */
+    /* Conmutador rapido entre escenas en modo sin AR */
+    #preview-switcher {
+      position: fixed;
+      top: calc(max(14px, env(safe-area-inset-top)) + 54px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      max-width: calc(100vw - 24px);
+      overflow-x: auto;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(6, 7, 11, 0.74);
+      border: 1px solid rgba(244, 246, 244, 0.14);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      scrollbar-width: none;
+    }
+
+    #preview-switcher::-webkit-scrollbar { display: none; }
+    #ar-layer.is-preview #preview-switcher {
+      display: flex;
+    }
+
+    .sw-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .sw-pill .sw-name {
+      display: none;
+    }
+    @media (min-width: 640px) {
+      .sw-pill .sw-name { display: inline; }
+    }
+
+    .sw-pill.is-current {
+      color: var(--ar-accent);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: color-mix(in srgb, var(--ar-accent) 55%, transparent);
+    }
+
+    /* Retícula minimalista de escaneo AR con laser */
     #ar-reticle {
       position: fixed;
       top: 50%;
@@ -436,7 +731,25 @@
       transform: translate(-50%, -50%);
       z-index: 45;
       pointer-events: none;
+      overflow: hidden;
       transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    #ar-reticle::after {
+      content: '';
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--ar-accent), transparent);
+      box-shadow: 0 0 12px var(--ar-accent);
+      opacity: 0.72;
+      animation: reticleScan 2.6s ease-in-out infinite;
+    }
+
+    @keyframes reticleScan {
+      0%, 100% { top: 10%; opacity: 0.3; }
+      50% { top: 88%; opacity: 0.9; }
     }
 
     #ar-reticle.is-locked {
@@ -448,7 +761,7 @@
       position: absolute;
       width: 24px;
       height: 24px;
-      border-color: var(--accent);
+      border-color: var(--ar-accent);
       border-style: solid;
       border-width: 0;
       filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.65));
@@ -458,16 +771,24 @@
     .c-bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 6px; }
     .c-br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 6px; }
 
-    /* Pastilla HUD elevada para esquivar el badge de Netlify */
-    #ar-hud {
+    /* Dock HUD inferior elevado para esquivar el badge de Netlify */
+    #ar-hud-dock {
       position: fixed;
       bottom: calc(max(18px, env(safe-area-inset-bottom)) + 56px);
       left: 50%;
       transform: translateX(-50%);
       z-index: 50;
+      width: min(560px, 92vw);
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    #ar-hud-status {
+      pointer-events: auto;
       background: rgba(5, 6, 7, 0.84);
-      border: 1px solid rgba(0, 255, 136, 0.35);
-      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--ar-accent) 40%, transparent);
+      color: var(--ar-accent);
       padding: 11px 20px;
       border-radius: 999px;
       font-family: var(--font-mono);
@@ -475,7 +796,7 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       text-align: center;
-      max-width: 90vw;
+      max-width: 100%;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       white-space: nowrap;
@@ -483,10 +804,270 @@
       text-overflow: ellipsis;
     }
 
+    #ar-hud-dock.has-project #ar-hud-status {
+      display: none;
+    }
+
+    #ar-project-card {
+      pointer-events: auto;
+      position: relative;
+      display: none;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px 12px 16px;
+      border-radius: 18px;
+      background: rgba(7, 9, 14, 0.82);
+      border: 1px solid color-mix(in srgb, var(--ar-accent) 48%, transparent);
+      box-shadow: 0 12px 38px rgba(0, 0, 0, 0.56), 0 0 24px color-mix(in srgb, var(--ar-accent) 18%, transparent);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      overflow: hidden;
+      animation: cardSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    #ar-hud-dock.has-project #ar-project-card {
+      display: flex;
+    }
+
+    @keyframes cardSlideUp {
+      from { opacity: 0; transform: translateY(10px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Efectos tematicos propios del HUD por target */
+    #ar-layer[data-ar-theme="crt"] #ar-project-card {
+      border-radius: 10px;
+      background:
+        repeating-linear-gradient(0deg, rgba(0, 229, 255, 0.04) 0 1px, transparent 1px 3px),
+        rgba(6, 9, 16, 0.88);
+    }
+
+    #ar-layer[data-ar-theme="crt"] .hud-project-title {
+      text-shadow: -1.5px 0 rgba(255, 42, 157, 0.85), 1.5px 0 rgba(0, 229, 255, 0.85);
+      animation: crtGlitch 3.8s infinite;
+    }
+
+    @keyframes crtGlitch {
+      0%, 92%, 100% { transform: translate(0); }
+      94% { transform: translate(-1.5px, 0.5px); }
+      96% { transform: translate(1.5px, -0.5px); }
+    }
+
+    #ar-layer[data-ar-theme="vessel"] #ar-project-card {
+      box-shadow: inset 0 0 0 1px rgba(245, 184, 65, 0.25), 0 12px 38px rgba(0, 0, 0, 0.62);
+    }
+
+    #ar-layer[data-ar-theme="japanese"] #ar-project-card {
+      border-left: 3px solid var(--ar-accent);
+    }
+
+    #ar-layer[data-ar-theme="spatial"] #ar-project-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 30%, rgba(168, 85, 247, 0.14) 50%, transparent 70%);
+      animation: shimmerSweep 4.2s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shimmerSweep {
+      0% { transform: translateX(-100%); }
+      60%, 100% { transform: translateX(120%); }
+    }
+
+    .hud-project-meta {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .hud-project-sub {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ar-accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hud-project-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(14px, 3.8vw, 17px);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hud-project-teaser {
+      margin: 0;
+      font-size: 11.5px;
+      line-height: 1.32;
+      color: rgba(244, 246, 244, 0.74);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .hud-info-btn {
+      flex-shrink: 0;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--ar-accent);
+      background: color-mix(in srgb, var(--ar-accent) 18%, rgba(5, 6, 7, 0.85));
+      color: var(--ar-accent);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hud-info-btn:hover {
+      transform: translateY(-1px);
+      background: var(--ar-accent);
+      color: #050607;
+      box-shadow: 0 0 22px color-mix(in srgb, var(--ar-accent) 55%, transparent);
+    }
+
+    /* Drawer / Modal de informacion detallada del proyecto */
+    #ar-info-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 65;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(4, 5, 8, 0.76);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    @media (min-width: 640px) {
+      #ar-info-modal {
+        align-items: center;
+      }
+    }
+
+    #ar-info-modal.is-open {
+      display: flex;
+    }
+
+    .info-sheet {
+      width: min(560px, 100%);
+      max-height: 82dvh;
+      overflow-y: auto;
+      border-radius: 22px;
+      padding: 22px;
+      background: rgba(10, 12, 18, 0.94);
+      border: 1px solid color-mix(in srgb, var(--ar-accent) 55%, transparent);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.75), 0 0 36px color-mix(in srgb, var(--ar-accent) 18%, transparent);
+      color: var(--ink);
+      animation: cardSlideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .info-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .info-venue {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ar-accent);
+      margin-bottom: 6px;
+    }
+
+    .info-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.2rem, 4.5vw, 1.65rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+
+    .info-subtitle {
+      margin: 4px 0 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .info-description {
+      margin: 14px 0 18px;
+      font-size: 14px;
+      line-height: 1.62;
+      color: rgba(244, 246, 244, 0.88);
+    }
+
+    .info-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 18px;
+    }
+
+    .info-tag {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--ar-accent) 36%, transparent);
+      background: color-mix(in srgb, var(--ar-accent) 10%, transparent);
+      color: var(--ink);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .info-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .info-ext-link {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ar-accent);
+      text-decoration: none;
+    }
+
+    .info-ext-link:hover {
+      text-decoration: underline;
+    }
+
     /* Accesibilidad: reducir movimiento */
     @media (prefers-reduced-motion: reduce) {
-      .status-dot { animation: none; }
-      .cta-btn, #landing-ui, #ar-layer, #ar-reticle { transition: none; }
+      .status-dot, #ar-reticle::after, .hud-project-title, #ar-project-card::before { animation: none; }
+      .cta-btn, #landing-ui, #ar-layer, #ar-reticle, #ar-ui-fx { transition: none; }
     }
   </style>
 </head>
@@ -533,6 +1114,11 @@
           <span class="btn-icon" aria-hidden="true">◎</span>
         </button>
 
+        <button id="btn-open-showcase" class="cta-btn cta-secondary" type="button">
+          <span>VER ESCENAS 3D</span>
+          <span class="btn-icon" aria-hidden="true">◈</span>
+        </button>
+
         <a
           id="btn-view-portfolio"
           class="cta-btn cta-secondary"
@@ -552,14 +1138,31 @@
     </footer>
   </main>
 
-  <!-- Experiencia WebAR Integrada -->
-  <section id="ar-layer" aria-label="Experiencia de Realidad Aumentada" aria-hidden="true">
+  <!-- Selector de Experiencias 3D sin AR -->
+  <section id="showcase-modal" role="dialog" aria-modal="true" aria-labelledby="showcase-title" aria-hidden="true">
+    <div class="showcase-dialog">
+      <div class="showcase-head">
+        <div>
+          <span class="showcase-eyebrow">Visor Interactivo 3D // Sin Cámara</span>
+          <h2 id="showcase-title" class="showcase-title">Explorar 5 Experiencias</h2>
+        </div>
+        <button id="btn-close-showcase" class="modal-close-btn" type="button" aria-label="Cerrar selector">✕</button>
+      </div>
+      <div id="showcase-grid" class="showcase-grid"></div>
+    </div>
+  </section>
+
+  <!-- Experiencia WebAR / Visor 3D Integrado -->
+  <section id="ar-layer" data-ar-theme="idle" aria-label="Experiencia de Realidad Aumentada" aria-hidden="true">
     <div id="ar-container"></div>
+    <div id="ar-ui-fx" aria-hidden="true"></div>
 
     <div class="ar-topbar">
       <button id="btn-exit-ar" class="ar-exit-btn" type="button">← VOLVER</button>
       <div class="ar-badge">WEBAR // LIVE</div>
     </div>
+
+    <nav id="preview-switcher" aria-label="Selector rápido de escenas 3D"></nav>
 
     <div id="ar-reticle" aria-hidden="true">
       <span class="corner c-tl"></span>
@@ -568,7 +1171,45 @@
       <span class="corner c-br"></span>
     </div>
 
-    <div id="ar-hud" role="status" aria-live="polite">INICIANDO CÁMARA AR...</div>
+    <div id="ar-hud-dock">
+      <div id="ar-hud-status" role="status" aria-live="polite">INICIANDO CÁMARA AR...</div>
+
+      <article id="ar-project-card" aria-live="polite">
+        <div class="hud-project-meta">
+          <span id="hud-project-sub" class="hud-project-sub"></span>
+          <h3 id="hud-project-title" class="hud-project-title"></h3>
+          <p id="hud-project-teaser" class="hud-project-teaser"></p>
+        </div>
+        <button id="btn-more-info" class="hud-info-btn" type="button">+ MÁS INFO</button>
+      </article>
+    </div>
+
+    <!-- Modal de información completa del proyecto -->
+    <div id="ar-info-modal" role="dialog" aria-modal="true" aria-labelledby="info-modal-title" aria-hidden="true">
+      <div class="info-sheet">
+        <div class="info-header">
+          <div>
+            <span id="info-modal-venue" class="info-venue"></span>
+            <h3 id="info-modal-title" class="info-title"></h3>
+            <p id="info-modal-sub" class="info-subtitle"></p>
+          </div>
+          <button id="btn-close-info" class="modal-close-btn" type="button" aria-label="Cerrar ficha">✕</button>
+        </div>
+
+        <p id="info-modal-desc" class="info-description"></p>
+        <div id="info-modal-tags" class="info-tags"></div>
+
+        <div class="info-footer">
+          <a
+            class="info-ext-link"
+            href="https://www.behance.net/gallery/254153935/PORTFOLIO-DIGITAL-INTERACTION-2026"
+            target="_blank"
+            rel="noopener noreferrer"
+          >VER EN BEHANCE ↗</a>
+          <button id="btn-close-info-footer" class="ar-exit-btn" type="button">CERRAR</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <script type="module">
@@ -894,37 +1535,160 @@
     /* =========================================================================
        3. INTEGRACIÓN REAL DE WEBAR (MindAR + Three.js con ./targets.mind)
     ========================================================================= */
-    import { mountARExperiences, mountPreviewExperience } from './ar/index.js';
+    import { TARGET_MANIFEST, mountARExperiences, mountPreviewExperience } from './ar/index.js';
 
     const landingUI = document.getElementById('landing-ui');
     const arLayer = document.getElementById('ar-layer');
     const arContainer = document.getElementById('ar-container');
-    const arHud = document.getElementById('ar-hud');
+    const arHudDock = document.getElementById('ar-hud-dock');
+    const arHudStatus = document.getElementById('ar-hud-status');
+    const hudProjectSub = document.getElementById('hud-project-sub');
+    const hudProjectTitle = document.getElementById('hud-project-title');
+    const hudProjectTeaser = document.getElementById('hud-project-teaser');
     const arBadge = document.querySelector('.ar-badge');
     const arReticle = document.getElementById('ar-reticle');
+    const previewSwitcher = document.getElementById('preview-switcher');
+
     const btnExploreAR = document.getElementById('btn-explore-ar');
+    const btnOpenShowcase = document.getElementById('btn-open-showcase');
+    const btnCloseShowcase = document.getElementById('btn-close-showcase');
+    const showcaseModal = document.getElementById('showcase-modal');
+    const showcaseGrid = document.getElementById('showcase-grid');
+
     const btnExitAR = document.getElementById('btn-exit-ar');
+    const btnMoreInfo = document.getElementById('btn-more-info');
+    const arInfoModal = document.getElementById('ar-info-modal');
+    const btnCloseInfo = document.getElementById('btn-close-info');
+    const btnCloseInfoFooter = document.getElementById('btn-close-info-footer');
+    const infoModalVenue = document.getElementById('info-modal-venue');
+    const infoModalTitle = document.getElementById('info-modal-title');
+    const infoModalSub = document.getElementById('info-modal-sub');
+    const infoModalDesc = document.getElementById('info-modal-desc');
+    const infoModalTags = document.getElementById('info-modal-tags');
 
     let activeMindAR = null;
     let activeARSession = null;
     let MindARThreeClass = null;
+    let activeEntry = null;
 
-    function setHudTheme(accentHex = '#00ff88') {
-      arHud.style.color = accentHex;
-      arHud.style.borderColor = accentHex + '66';
-      if (arBadge) {
-        arBadge.style.color = accentHex;
-        arBadge.style.borderColor = accentHex + '66';
+    function applyTheme(entry) {
+      if (!entry) {
+        arLayer.setAttribute('data-ar-theme', 'idle');
+        arLayer.style.setProperty('--ar-accent', '#00ff88');
+        arLayer.style.setProperty('--ar-secondary', '#7c3aed');
+        arHudDock.classList.remove('has-project');
+        activeEntry = null;
+        return;
+      }
+
+      activeEntry = entry;
+      arLayer.setAttribute('data-ar-theme', entry.theme);
+      arLayer.style.setProperty('--ar-accent', entry.accent);
+      arLayer.style.setProperty('--ar-secondary', entry.secondary || entry.accent);
+      hudProjectSub.textContent = entry.subtitle;
+      hudProjectTitle.textContent = entry.title;
+      hudProjectTeaser.textContent = entry.teaser;
+      arHudDock.classList.add('has-project');
+    }
+
+    function openProjectInfoModal() {
+      if (!activeEntry) return;
+      infoModalVenue.textContent = activeEntry.venue;
+      infoModalTitle.textContent = activeEntry.title;
+      infoModalSub.textContent = activeEntry.subtitle;
+      infoModalDesc.textContent = activeEntry.description;
+      infoModalTags.innerHTML = '';
+      for (const tag of activeEntry.tags) {
+        const span = document.createElement('span');
+        span.className = 'info-tag';
+        span.textContent = tag;
+        infoModalTags.appendChild(span);
+      }
+      arInfoModal.classList.add('is-open');
+      arInfoModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeProjectInfoModal() {
+      arInfoModal.classList.remove('is-open');
+      arInfoModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function openShowcaseModal() {
+      showcaseModal.classList.add('is-open');
+      showcaseModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeShowcaseModal() {
+      showcaseModal.classList.remove('is-open');
+      showcaseModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function renderShowcaseAndSwitcher() {
+      showcaseGrid.innerHTML = '';
+      previewSwitcher.innerHTML = '';
+
+      for (const entry of TARGET_MANIFEST) {
+        // Tarjeta del selector principal sin AR
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'showcase-card';
+        card.style.setProperty('--card-accent', entry.accent);
+        card.innerHTML = `
+          <div class="showcase-card-top">
+            <span>TARGET ${entry.code}</span>
+            <span>EXPLORAR 3D ↗</span>
+          </div>
+          <div class="showcase-card-name"></div>
+          <div class="showcase-card-sub"></div>
+          <p class="showcase-card-teaser"></p>
+        `;
+        card.querySelector('.showcase-card-name').textContent = entry.title;
+        card.querySelector('.showcase-card-sub').textContent = entry.subtitle;
+        card.querySelector('.showcase-card-teaser').textContent = entry.teaser;
+        card.addEventListener('click', () => {
+          closeShowcaseModal();
+          launchPreview(entry.index);
+        });
+        showcaseGrid.appendChild(card);
+
+        // Pill del switcher rapido dentro del Visor 3D
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'sw-pill';
+        pill.dataset.index = String(entry.index);
+        pill.innerHTML = `<span>${entry.code}</span><span class="sw-name"></span>`;
+        pill.querySelector('.sw-name').textContent = entry.shortTitle;
+        pill.addEventListener('click', () => {
+          if (activeARSession && typeof activeARSession.switchTo === 'function') {
+            closeProjectInfoModal();
+            activeARSession.switchTo(entry.index);
+          }
+        });
+        previewSwitcher.appendChild(pill);
       }
     }
 
+    function syncPreviewSwitcher(currentIndex) {
+      const pills = previewSwitcher.querySelectorAll('.sw-pill');
+      pills.forEach((p) => {
+        p.classList.toggle('is-current', Number(p.dataset.index) === currentIndex);
+      });
+    }
+
+    renderShowcaseAndSwitcher();
+
     async function launchAR() {
+      closeShowcaseModal();
+      closeProjectInfoModal();
       landingUI.classList.add('is-hidden');
+      arLayer.classList.remove('is-preview');
       arLayer.classList.add('is-active');
       arLayer.setAttribute('aria-hidden', 'false');
       arReticle.classList.remove('is-locked');
-      setHudTheme('#00ff88');
-      arHud.textContent = 'CARGANDO MOTOR WEBAR...';
+      applyTheme(null);
+      if (arBadge) arBadge.textContent = 'WEBAR // LIVE';
+      arHudStatus.style.color = '';
+      arHudStatus.textContent = 'CARGANDO MOTOR WEBAR...';
 
       if (window.__pauseLandingBg) window.__pauseLandingBg();
 
@@ -935,7 +1699,7 @@
         }
 
         arContainer.innerHTML = '';
-        arHud.textContent = 'SOLICITANDO CÁMARA...';
+        arHudStatus.textContent = 'SOLICITANDO CÁMARA...';
 
         activeMindAR = new MindARThreeClass({
           container: arContainer,
@@ -952,18 +1716,18 @@
         activeARSession = mountARExperiences(activeMindAR, THREE, {
           onTargetFound: (entry) => {
             arReticle.classList.add('is-locked');
-            setHudTheme(entry.accent);
-            arHud.textContent = entry.hudTitle;
+            applyTheme(entry);
           },
           onTargetLost: () => {
             arReticle.classList.remove('is-locked');
-            setHudTheme('#00ff88');
-            arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
+            closeProjectInfoModal();
+            applyTheme(null);
+            arHudStatus.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
           }
         });
 
         await activeMindAR.start();
-        arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
+        arHudStatus.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
 
         const arClock = new THREE.Clock();
         renderer.setAnimationLoop(() => {
@@ -974,14 +1738,17 @@
         });
       } catch (err) {
         console.error(err);
-        setHudTheme('#ff5555');
-        arHud.textContent = 'ERROR AR: ' + (err.message || 'PERMISO DENEGADO');
+        applyTheme(null);
+        arLayer.style.setProperty('--ar-accent', '#ff5555');
+        arHudStatus.textContent = 'ERROR AR: ' + (err.message || 'PERMISO DENEGADO');
       }
     }
 
     async function launchPreview(targetIndex) {
+      closeShowcaseModal();
+      closeProjectInfoModal();
       landingUI.classList.add('is-hidden');
-      arLayer.classList.add('is-active');
+      arLayer.classList.add('is-active', 'is-preview');
       arLayer.setAttribute('aria-hidden', 'false');
       arReticle.classList.add('is-locked');
       if (window.__pauseLandingBg) window.__pauseLandingBg();
@@ -990,19 +1757,21 @@
       try {
         activeARSession = await mountPreviewExperience(arContainer, THREE, targetIndex, {
           onTargetFound: (entry) => {
-            setHudTheme(entry.accent);
-            arHud.textContent = 'PREVIEW // ' + entry.hudTitle.replace('ACTIVO // ', '');
-            if (arBadge) arBadge.textContent = '3D PREVIEW // T' + entry.index;
+            applyTheme(entry);
+            syncPreviewSwitcher(entry.index);
+            if (arBadge) arBadge.textContent = 'VISOR 3D // ' + entry.code;
           }
         });
       } catch (err) {
         console.error(err);
-        setHudTheme('#ff5555');
-        arHud.textContent = 'ERROR PREVIEW: ' + (err.message || 'WEBGL ERROR');
+        applyTheme(null);
+        arLayer.style.setProperty('--ar-accent', '#ff5555');
+        arHudStatus.textContent = 'ERROR PREVIEW: ' + (err.message || 'WEBGL ERROR');
       }
     }
 
     function exitAR() {
+      closeProjectInfoModal();
       try {
         if (activeARSession) {
           activeARSession.dispose();
@@ -1018,17 +1787,36 @@
       }
 
       arContainer.innerHTML = '';
-      arLayer.classList.remove('is-active');
+      arLayer.classList.remove('is-active', 'is-preview');
       arLayer.setAttribute('aria-hidden', 'true');
       landingUI.classList.remove('is-hidden');
-      setHudTheme('#00ff88');
+      applyTheme(null);
       if (arBadge) arBadge.textContent = 'WEBAR // LIVE';
 
       if (window.__resumeLandingBg) window.__resumeLandingBg();
     }
 
     btnExploreAR.addEventListener('click', launchAR);
+    btnOpenShowcase.addEventListener('click', openShowcaseModal);
+    btnCloseShowcase.addEventListener('click', closeShowcaseModal);
+    showcaseModal.addEventListener('click', (e) => {
+      if (e.target === showcaseModal) closeShowcaseModal();
+    });
+
     btnExitAR.addEventListener('click', exitAR);
+    btnMoreInfo.addEventListener('click', openProjectInfoModal);
+    btnCloseInfo.addEventListener('click', closeProjectInfoModal);
+    btnCloseInfoFooter.addEventListener('click', closeProjectInfoModal);
+    arInfoModal.addEventListener('click', (e) => {
+      if (e.target === arInfoModal) closeProjectInfoModal();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (arInfoModal.classList.contains('is-open')) closeProjectInfoModal();
+        else if (showcaseModal.classList.contains('is-open')) closeShowcaseModal();
+      }
+    });
 
     const previewParam = new URLSearchParams(window.location.search).get('preview');
     if (previewParam !== null) {

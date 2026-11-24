@@ -2,6 +2,7 @@ import {
   GLSL_NOISE,
   createCanvasTexture,
   createSoftGlowTexture,
+  createStarFlareTexture,
   disposeObject3D,
   easeOutCubic
 } from '../shared.js';
@@ -264,13 +265,42 @@ export function createFantasyForestExperience(THREE) {
   // Uniform compartido para viento en follaje y pasto
   const windUniform = { value: 0 };
 
+  const foliageDetailMap = createCanvasTexture(
+    THREE,
+    256,
+    256,
+    (ctx, w, h) => {
+      ctx.fillStyle = '#c8c8c8';
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 650; i++) {
+        const shade = 140 + Math.floor(Math.random() * 115);
+        ctx.fillStyle = `rgba(${shade}, ${Math.min(255, shade + 15)}, ${Math.max(80, shade - 30)}, 0.42)`;
+        ctx.beginPath();
+        ctx.ellipse(
+          Math.random() * w,
+          Math.random() * h,
+          3 + Math.random() * 8,
+          2 + Math.random() * 5,
+          Math.random() * Math.PI,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+    },
+    { srgb: true, repeat: [2, 2] }
+  );
+
   function createFoliageMaterial(baseColorHex, rimColorHex, phase) {
     const mat = new THREE.MeshStandardMaterial({
       color: baseColorHex,
-      roughness: 0.72,
+      map: foliageDetailMap,
+      bumpMap: foliageDetailMap,
+      bumpScale: 0.012,
+      roughness: 0.68,
       metalness: 0.02,
       emissive: 0x1a260a,
-      emissiveIntensity: 0.2
+      emissiveIntensity: 0.24
     });
     const rimColor = new THREE.Color(rimColorHex);
     mat.onBeforeCompile = (shader) => {
@@ -313,23 +343,26 @@ export function createFantasyForestExperience(THREE) {
           /* glsl */ `
           #include <emissivemap_fragment>
           vec3 nView = normalize(vNormal);
-          float fresnel = pow(1.0 - abs(dot(nView, normalize(vViewPosition))), 2.2);
+          float fresnel = pow(1.0 - abs(dot(nView, normalize(vViewPosition))), 2.1);
           float topSun = smoothstep(-0.2, 0.85, vLocalDir.y * 0.65 - vLocalDir.x * 0.35);
-          totalEmissiveRadiance += uRimColor * (fresnel * 0.55 + topSun * 0.16);
+          totalEmissiveRadiance += uRimColor * (fresnel * 0.65 + topSun * 0.22);
           `
         );
     };
     return mat;
   }
 
-  // Geometria organica base de copa (icosaedro suavemente perturbado)
-  const canopyBaseGeo = new THREE.IcosahedronGeometry(1, 2);
+  // Geometria organica suave de copa (subdivision 3 con deformacion multi-frecuencia)
+  const canopyBaseGeo = new THREE.IcosahedronGeometry(1, 3);
   const cPos = canopyBaseGeo.attributes.position;
   for (let i = 0; i < cPos.count; i++) {
     const x = cPos.getX(i);
     const y = cPos.getY(i);
     const z = cPos.getZ(i);
-    const n = 1 + 0.14 * Math.sin(x * 4.2 + y * 3.1) * Math.cos(z * 4.6);
+    const n =
+      1 +
+      0.11 * Math.sin(x * 3.6 + y * 2.9) * Math.cos(z * 4.1) +
+      0.05 * Math.sin(z * 7.2 - x * 6.0);
     cPos.setXYZ(i, x * n, y * n * 0.84, z * n);
   }
   canopyBaseGeo.computeVertexNormals();
@@ -413,8 +446,146 @@ export function createFantasyForestExperience(THREE) {
       tree.add(lobe);
     }
 
+    // Lianas colgantes sutiles en los arboles principales
+    if (idx < 4) {
+      for (let v = 0; v < 2; v++) {
+        const vineLen = 0.07 + rand() * 0.05;
+        const vine = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.0014, 0.0008, vineLen, 5),
+          foliageMats[(spec.matIdx + v) % foliageMats.length]
+        );
+        vine.position.set(
+          spec.leanX + (v === 0 ? -0.05 : 0.05),
+          spec.h * 0.72 - vineLen * 0.5,
+          spec.leanZ + (v === 0 ? 0.04 : -0.04)
+        );
+        tree.add(vine);
+      }
+    }
+
     stage.add(tree);
   });
+
+  /* =========================================================================
+     3B. SANTUARIO CENTRAL (PILARES CON LLAMA ETEREA) & ARROYO REFLECTIVO GLSL
+  ========================================================================= */
+  const sanctuaryGroup = new THREE.Group();
+  stage.add(sanctuaryGroup);
+
+  const carvedStoneMat = new THREE.MeshStandardMaterial({
+    color: 0x454d59,
+    roughness: 0.78,
+    metalness: 0.18
+  });
+
+  const flameMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uReveal: { value: 0 }
+    },
+    vertexShader: /* glsl */ `
+      uniform float uTime;
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        vec3 p = position;
+        float sway = sin(uTime * 5.0 + position.y * 28.0) * 0.004 * uv.y;
+        p.x += sway;
+        p.z += cos(uTime * 4.2 + position.y * 24.0) * 0.003 * uv.y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uReveal;
+      varying vec2 vUv;
+      ${GLSL_NOISE}
+
+      void main() {
+        float n = fbm2D(vec2(vUv.x * 5.0, vUv.y * 4.0 - uTime * 2.2));
+        float shape = smoothstep(0.0, 0.25, vUv.y) * smoothstep(1.0, 0.15, vUv.y);
+        vec3 blue = vec3(0.32, 0.65, 1.0);
+        vec3 violet = vec3(0.68, 0.42, 1.0);
+        vec3 core = vec3(0.92, 0.98, 1.0);
+        vec3 col = mix(violet, blue, vUv.y);
+        col = mix(col, core, smoothstep(0.55, 0.85, n) * (1.0 - vUv.y));
+        gl_FragColor = vec4(col * 1.4, shape * (0.55 + 0.45 * n) * uReveal);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+
+  // Dos pilares ceremoniales inspirados en target1.png
+  const pillarPositions = [
+    [-0.036, -0.02, 0.092],
+    [0.036, -0.06, 0.112]
+  ];
+  pillarPositions.forEach(([px, pz, ph]) => {
+    const py = getTerrainHeight(px, pz);
+    const pBase = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.014, 0.032), carvedStoneMat);
+    pBase.position.set(px, py + 0.006, pz);
+    pBase.castShadow = true;
+    pBase.receiveShadow = true;
+
+    const pCol = new THREE.Mesh(new THREE.CylinderGeometry(0.010, 0.012, ph, 10), carvedStoneMat);
+    pCol.position.set(px, py + ph * 0.5 + 0.01, pz);
+    pCol.castShadow = true;
+
+    const pCap = new THREE.Mesh(new THREE.BoxGeometry(0.026, 0.010, 0.026), carvedStoneMat);
+    pCap.position.set(px, py + ph + 0.014, pz);
+
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.016, 0.042, 12, 6, true), flameMat);
+    flame.position.set(px, py + ph + 0.04, pz);
+
+    sanctuaryGroup.add(pBase, pCol, pCap, flame);
+  });
+
+  const pillarLight = new THREE.PointLight(0x7c8cff, 0.65, 0.45, 2.0);
+  pillarLight.userData.baseIntensity = 0.65;
+  pillarLight.position.set(0, 0.14, -0.04);
+  stage.add(pillarLight);
+  lights.push(pillarLight);
+
+  // Pequeño arroyo/espejo de agua en el claro central
+  const streamGeo = new THREE.PlaneGeometry(0.18, 0.34);
+  streamGeo.rotateX(-Math.PI / 2);
+  const streamMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uReveal: { value: 0 }
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uReveal;
+      varying vec2 vUv;
+      ${GLSL_NOISE}
+
+      void main() {
+        vec2 p = vUv - 0.5;
+        float n = fbm2D(vec2(vUv.x * 6.0, vUv.y * 8.0 - uTime * 0.45));
+        float shape = smoothstep(0.46, 0.18, length(vec2(p.x * 1.4 + sin(vUv.y * 5.0) * 0.08, p.y)));
+        vec3 col = mix(vec3(0.08, 0.16, 0.22), vec3(0.45, 0.72, 0.95), smoothstep(0.48, 0.78, n));
+        col += vec3(1.0, 0.86, 0.48) * pow(n, 3.0) * 0.65;
+        gl_FragColor = vec4(col, shape * 0.68 * uReveal);
+      }
+    `,
+    transparent: true,
+    depthWrite: false
+  });
+  const stream = new THREE.Mesh(streamGeo, streamMat);
+  stream.position.set(0.02, 0.005, 0.11);
+  stream.rotation.y = -0.25;
+  stage.add(stream);
 
   /* =========================================================================
      4. VEGETACION INSTANCIADA (PASTO CON VIENTO), ROCAS Y HONGOS BIOLUMINISCENTES
@@ -631,6 +802,22 @@ export function createFantasyForestExperience(THREE) {
     stage.add(ray);
   }
 
+  // Destello solar anamorfico suave entre las copas superiores (guiño a target1.png)
+  const flareTex = createStarFlareTexture(THREE, 128);
+  const sunFlare = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: flareTex,
+      color: 0xffd578,
+      transparent: true,
+      opacity: 0.78,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  sunFlare.position.set(-0.18, 0.37, 0.06);
+  sunFlare.scale.set(0.32, 0.095, 1);
+  stage.add(sunFlare);
+
   /* =========================================================================
      6. NIEBLA AMBIENTAL LOCAL (SHADERS CON VIGNETTE RADIAL)
   ========================================================================= */
@@ -826,12 +1013,20 @@ export function createFantasyForestExperience(THREE) {
     windUniform.value = elapsed;
     godRayMat.uniforms.uTime.value = elapsed;
     godRayMat.uniforms.uReveal.value = rev;
+    flameMat.uniforms.uTime.value = elapsed;
+    flameMat.uniforms.uReveal.value = rev;
+    streamMat.uniforms.uTime.value = elapsed;
+    streamMat.uniforms.uReveal.value = rev;
     mistMat.uniforms.uTime.value = elapsed;
     mistMat.uniforms.uReveal.value = rev;
     ffMat.uniforms.uTime.value = elapsed;
     ffMat.uniforms.uReveal.value = rev;
     polMat.uniforms.uTime.value = elapsed;
     polMat.uniforms.uReveal.value = rev;
+
+    const flarePulse = 0.92 + 0.1 * Math.sin(elapsed * 1.4);
+    sunFlare.scale.set(0.32 * flarePulse * rev, 0.095 * flarePulse * rev, 1);
+    pillarLight.intensity = pillarLight.userData.baseIntensity * (0.85 + 0.2 * Math.sin(elapsed * 4.2)) * rev;
 
     // Movimiento 3D de las luciernagas hero con luz dinamica
     fireflyLightA.position.set(

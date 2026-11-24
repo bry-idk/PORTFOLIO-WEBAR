@@ -2,6 +2,7 @@ import {
   GLSL_NOISE,
   createCanvasTexture,
   createSoftGlowTexture,
+  createStarFlareTexture,
   disposeObject3D,
   easeOutCubic
 } from '../shared.js';
@@ -169,12 +170,14 @@ export function createSpatialSystemsExperience(THREE) {
         float pixelAccent = step(0.86, hash21(px + floor(uTime * 0.8))) * 0.35;
 
         vec3 obsidian = vec3(0.03, 0.03, 0.06);
-        vec3 silver = vec3(0.92, 0.94, 1.0);
-        vec3 col = mix(obsidian, uTint, wisp * 0.72 + fresnel * 0.45);
-        col += silver * (pow(wisp, 3.0) * 0.65 + fresnel * 0.55 + pixelAccent);
+        vec3 silver = vec3(0.92, 0.96, 1.0);
+        // Dispersion dicroica en borde Fresnel (amatista -> cian/esmeralda -> plata)
+        vec3 dichroic = mix(uTint, vec3(0.18, 0.95, 0.82), pow(fresnel, 1.6) * 0.45);
+        vec3 col = mix(obsidian, dichroic, wisp * 0.72 + fresnel * 0.5);
+        col += silver * (pow(wisp, 3.0) * 0.68 + fresnel * 0.62 + pixelAccent);
 
-        float alpha = (0.32 + wisp * 0.35 + fresnel * 0.45) * uReveal;
-        gl_FragColor = vec4(col, clamp(alpha, 0.0, 0.92));
+        float alpha = (0.30 + wisp * 0.34 + fresnel * 0.48) * uReveal;
+        gl_FragColor = vec4(col, clamp(alpha, 0.0, 0.94));
       }
     `,
     transparent: true,
@@ -219,13 +222,29 @@ export function createSpatialSystemsExperience(THREE) {
 
   monolithGroup.add(mainPrism, innerPrism, upperBlock, lowerBlock);
 
-  // Nucleo estelar central + destello de 4 puntas (estrella en el vertice de target-titulo.png)
+  // Nucleo estelar central + astrolabio giroscopico 3D + destello de 4 puntas
   const coreGeo = new THREE.OctahedronGeometry(0.042, 0);
   const coreMat = new THREE.MeshBasicMaterial({ color: 0xf7ecff });
   const starCore = new THREE.Mesh(coreGeo, coreMat);
   monolithGroup.add(starCore);
 
+  const gyroMat = new THREE.MeshBasicMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0.78
+  });
+  const gyroMatViolet = new THREE.MeshBasicMaterial({
+    color: 0xd8b4fe,
+    transparent: true,
+    opacity: 0.82
+  });
+  const gyroA = new THREE.Mesh(new THREE.TorusGeometry(0.078, 0.0016, 6, 48), gyroMatViolet);
+  const gyroB = new THREE.Mesh(new THREE.TorusGeometry(0.092, 0.0014, 6, 48), gyroMat);
+  const gyroC = new THREE.Mesh(new THREE.TorusGeometry(0.106, 0.0014, 6, 48), gyroMatViolet);
+  monolithGroup.add(gyroA, gyroB, gyroC);
+
   const glowTex = createSoftGlowTexture(THREE, 128);
+  const flareTex = createStarFlareTexture(THREE, 128);
   const coreHalo = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: glowTex,
@@ -235,23 +254,78 @@ export function createSpatialSystemsExperience(THREE) {
       depthWrite: false
     })
   );
-  coreHalo.scale.setScalar(0.22);
+  coreHalo.scale.setScalar(0.24);
   monolithGroup.add(coreHalo);
 
-  // Cruz estelar de 4 puntas fina
-  const starRayMat = new THREE.MeshBasicMaterial({
-    color: 0xffffff,
+  const starSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: flareTex,
+      color: 0xffffff,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  starSprite.position.set(0, 0, 0.11);
+  starSprite.scale.setScalar(0.18);
+  monolithGroup.add(starSprite);
+
+  // Haz holografico vertical conectando la reticula base con el monolito
+  const beamColGeo = new THREE.CylinderGeometry(0.12, 0.21, 0.36, 28, 1, true);
+  beamColGeo.translate(0, 0.18, 0);
+  const beamColMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uReveal: { value: 0 }
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uReveal;
+      varying vec2 vUv;
+      void main() {
+        float stripe = 0.5 + 0.5 * sin(vUv.x * 24.0 + uTime * 1.4);
+        float fade = smoothstep(0.0, 0.25, vUv.y) * smoothstep(1.0, 0.15, vUv.y);
+        vec3 col = mix(vec3(0.0, 1.0, 0.53), vec3(0.66, 0.34, 1.0), vUv.y);
+        gl_FragColor = vec4(col, fade * (0.06 + 0.08 * stripe) * uReveal);
+      }
+    `,
     transparent: true,
-    opacity: 0.9,
     blending: THREE.AdditiveBlending,
-    depthWrite: false
+    depthWrite: false,
+    side: THREE.DoubleSide
   });
-  const starH = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.006), starRayMat);
-  const starV = new THREE.Mesh(new THREE.PlaneGeometry(0.006, 0.16), starRayMat);
-  const starPivot = new THREE.Group();
-  starPivot.position.set(0, 0, 0.11);
-  starPivot.add(starH, starV);
-  monolithGroup.add(starPivot);
+  const holoBeam = new THREE.Mesh(beamColGeo, beamColMat);
+  holoBeam.position.set(0, -0.35, 0);
+  stage.add(holoBeam);
+
+  // Red nodal 3D conectando nucleo, esferas y nodos arquitectonicos
+  const nodePts = [
+    new THREE.Vector3(0, 0.03, 0),
+    new THREE.Vector3(0.175, 0.175, 0.04),
+    new THREE.Vector3(0, 0.03, 0),
+    new THREE.Vector3(-0.22, 0.14, -0.08),
+    new THREE.Vector3(0, 0.03, 0),
+    new THREE.Vector3(0.08, -0.22, -0.02),
+    new THREE.Vector3(0.175, 0.175, 0.04),
+    new THREE.Vector3(0.32, 0.20, -0.02),
+    new THREE.Vector3(-0.22, 0.14, -0.08),
+    new THREE.Vector3(-0.31, 0.17, 0.02)
+  ];
+  const networkGeo = new THREE.BufferGeometry().setFromPoints(nodePts);
+  const networkMat = new THREE.LineBasicMaterial({
+    color: 0x00ff88,
+    transparent: true,
+    opacity: 0.45
+  });
+  const networkLines = new THREE.LineSegments(networkGeo, networkMat);
+  stage.add(networkLines);
 
   /* =========================================================================
      4. ESFERAS DE OBSIDIANA IRIDISCENTE & ANILLOS ORBITALES DE TELEMETRIA
@@ -291,9 +365,22 @@ export function createSpatialSystemsExperience(THREE) {
     envMapIntensity: 1.4
   });
 
-  // Esfera protagonista superior-derecha + 2 satelites orbitales
+  // Esfera protagonista superior-derecha con destello + 2 satelites orbitales
   const heroSphere = new THREE.Mesh(new THREE.SphereGeometry(0.078, 32, 24), obsidianSphereMat);
   heroSphere.position.set(0.175, 0.175, 0.04);
+  const heroFlare = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: flareTex,
+      color: 0xd8b4fe,
+      transparent: true,
+      opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  heroFlare.position.set(-0.04, 0.05, 0.06);
+  heroFlare.scale.setScalar(0.11);
+  heroSphere.add(heroFlare);
   stage.add(heroSphere);
 
   const satSphereA = new THREE.Mesh(new THREE.SphereGeometry(0.026, 20, 16), obsidianSphereMat);
@@ -511,6 +598,8 @@ export function createSpatialSystemsExperience(THREE) {
 
     gridMat.uniforms.uTime.value = elapsed;
     gridMat.uniforms.uReveal.value = rev;
+    beamColMat.uniforms.uTime.value = elapsed;
+    beamColMat.uniforms.uReveal.value = rev;
     nebulaCrystalMat.uniforms.uTime.value = elapsed;
     nebulaCrystalMat.uniforms.uReveal.value = rev;
     orbitRingMat.uniforms.uTime.value = elapsed;
@@ -518,7 +607,9 @@ export function createSpatialSystemsExperience(THREE) {
     ribbonMat.uniforms.uTime.value = elapsed;
     ribbonMat.uniforms.uReveal.value = rev;
 
-    // Coreografia en contrafase del hipercubo y nucleo estelar
+    networkMat.opacity = (0.3 + 0.25 * Math.sin(elapsed * 2.2)) * rev;
+
+    // Coreografia en contrafase del hipercubo, astrolabio y nucleo estelar
     monolithGroup.position.y = 0.03 + Math.sin(elapsed * 1.15) * 0.015;
     mainPrism.rotation.y = 0.78 + elapsed * 0.24;
     mainPrism.rotation.x = 0.58 + Math.sin(elapsed * 0.5) * 0.08;
@@ -527,11 +618,15 @@ export function createSpatialSystemsExperience(THREE) {
     upperBlock.rotation.y = 0.78 - elapsed * 0.18;
     lowerBlock.rotation.y = 0.78 + elapsed * 0.22;
 
+    gyroA.rotation.set(elapsed * 0.75, elapsed * 0.4, 0.3);
+    gyroB.rotation.set(-elapsed * 0.5, elapsed * 0.9, 1.1);
+    gyroC.rotation.set(0.6, -elapsed * 0.65, elapsed * 0.45);
+
     starCore.rotation.y = elapsed * 0.9;
     starCore.rotation.x = elapsed * 0.6;
     const starPulse = 0.9 + 0.22 * Math.sin(elapsed * 3.0);
-    starPivot.scale.setScalar(starPulse * rev);
-    coreHalo.scale.setScalar(0.20 * starPulse * rev);
+    starSprite.scale.setScalar(0.18 * starPulse * rev);
+    coreHalo.scale.setScalar(0.22 * starPulse * rev);
 
     // Orbitas de satelites y anillos
     heroSphere.rotation.y = elapsed * 0.28;

@@ -204,6 +204,73 @@ export function createJapaneseCultureExperience(THREE) {
     stage.add(stone);
   }
 
+  // Peces Koi luminosos nadando en el estanque
+  const koiList = [];
+  function createKoi(bodyHex, accentHex, radius, speed, phase) {
+    const koi = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.ConeGeometry(0.009, 0.036, 8),
+      new THREE.MeshStandardMaterial({
+        color: bodyHex,
+        emissive: accentHex,
+        emissiveIntensity: 0.45,
+        roughness: 0.25,
+        metalness: 0.2
+      })
+    );
+    body.rotation.x = Math.PI / 2;
+    body.scale.set(1.0, 1.0, 0.65);
+
+    const tail = new THREE.Mesh(
+      new THREE.ConeGeometry(0.008, 0.018, 4),
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: accentHex,
+        emissiveIntensity: 0.35,
+        roughness: 0.3
+      })
+    );
+    tail.rotation.x = -Math.PI / 2;
+    tail.scale.set(0.35, 1.0, 1.1);
+    tail.position.z = -0.022;
+
+    koi.add(body, tail);
+    koi.userData = { tail, radius, speed, phase };
+    stage.add(koi);
+    koiList.push(koi);
+  }
+  createKoi(0xff7722, 0xff4400, 0.145, 0.55, 0.0);
+  createKoi(0xfff1e0, 0xff2244, 0.105, -0.68, 2.2);
+
+  // Puente arqueado tradicional (Taiko-bashi) cruzando el estanque
+  const bridgeGroup = new THREE.Group();
+  bridgeGroup.position.set(0.11, 0.004, 0.11);
+  bridgeGroup.rotation.y = -0.52;
+  const bridgeWoodMat = new THREE.MeshStandardMaterial({
+    color: 0xb82222,
+    roughness: 0.42,
+    metalness: 0.12
+  });
+  for (let b = -4; b <= 4; b++) {
+    const t = b / 4;
+    const archY = Math.cos(t * Math.PI * 0.5) * 0.026;
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.006, 0.052), bridgeWoodMat);
+    plank.position.set(t * 0.075, archY, 0);
+    plank.rotation.z = -Math.sin(t * Math.PI * 0.5) * 0.28;
+    plank.castShadow = true;
+    bridgeGroup.add(plank);
+  }
+  [-0.024, 0.024].forEach((rz) => {
+    const railCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.08, 0.018, rz),
+      new THREE.Vector3(0.0, 0.046, rz),
+      new THREE.Vector3(0.08, 0.018, rz)
+    ]);
+    const rail = new THREE.Mesh(new THREE.TubeGeometry(railCurve, 12, 0.003, 6, false), goldMat);
+    bridgeGroup.add(rail);
+  });
+  stage.add(bridgeGroup);
+
   /* =========================================================================
      3. DISCO LUNAR/SOLAR CARMESI CON ONDAS SEIGAIHA (GLSL)
   ========================================================================= */
@@ -497,20 +564,44 @@ export function createJapaneseCultureExperience(THREE) {
   sakuraBranch.castShadow = true;
   sakuraGroup.add(sakuraBranch);
 
-  // Cumulos de flores sakura con glow suave (sin tapar la placa del Torii)
+  // Cumulos de flores sakura con textura organica y glow suave
+  const sakuraTex = createCanvasTexture(
+    THREE,
+    128,
+    128,
+    (ctx, w, h) => {
+      ctx.fillStyle = '#ffd0e2';
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 220; i++) {
+        ctx.fillStyle =
+          i % 3 === 0
+            ? 'rgba(255, 255, 255, 0.45)'
+            : i % 2 === 0
+              ? 'rgba(255, 118, 165, 0.35)'
+              : 'rgba(255, 182, 208, 0.4)';
+        ctx.beginPath();
+        ctx.arc(Math.random() * w, Math.random() * h, 2 + Math.random() * 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+    { srgb: true }
+  );
+
   const blossomMatA = new THREE.MeshStandardMaterial({
     color: 0xff9ec2,
+    map: sakuraTex,
     emissive: 0xff3b7d,
-    emissiveIntensity: 0.42,
-    roughness: 0.55
+    emissiveIntensity: 0.45,
+    roughness: 0.52
   });
   const blossomMatB = new THREE.MeshStandardMaterial({
     color: 0xffdbe8,
+    map: sakuraTex,
     emissive: 0xff6b9e,
-    emissiveIntensity: 0.35,
-    roughness: 0.5
+    emissiveIntensity: 0.38,
+    roughness: 0.48
   });
-  const blossomGeo = new THREE.IcosahedronGeometry(1, 1);
+  const blossomGeo = new THREE.IcosahedronGeometry(1, 2);
   const blossomSpots = [
     [0.095, 0.31, 0.02, 0.062, 0],
     [0.055, 0.28, 0.05, 0.048, 1],
@@ -645,7 +736,77 @@ export function createJapaneseCultureExperience(THREE) {
   toroGroup.add(toroPost, toroBox, toroRoof);
   stage.add(toroGroup);
 
-  lanternLightA.position.set(-0.08, 0.16, 0.04);
+  // Campana ceremonial Bonsho ("Kane no Hibiki" = eco de la campana) + ondas sonoras GLSL
+  const bellStand = new THREE.Group();
+  bellStand.position.set(-0.22, 0.0, 0.16);
+  bellStand.rotation.y = 0.45;
+  [-0.036, 0.036].forEach((px) => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.006, 0.11, 8), sakuraWoodMat);
+    post.position.set(px, 0.055, 0);
+    post.castShadow = true;
+    bellStand.add(post);
+  });
+  const bellBeam = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.010, 0.014), lacquerBlackMat);
+  bellBeam.position.y = 0.11;
+  bellStand.add(bellBeam);
+
+  const bellPivot = new THREE.Group();
+  bellPivot.position.set(0, 0.105, 0);
+  const bellBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.014, 0.022, 0.044, 18),
+    new THREE.MeshStandardMaterial({
+      color: 0xd9a848,
+      emissive: 0x452804,
+      emissiveIntensity: 0.4,
+      metalness: 0.88,
+      roughness: 0.24
+    })
+  );
+  bellBody.position.y = -0.028;
+  bellBody.castShadow = true;
+  bellPivot.add(bellBody);
+  bellStand.add(bellPivot);
+
+  const soundWaveGeo = new THREE.PlaneGeometry(0.24, 0.24);
+  soundWaveGeo.rotateX(-Math.PI / 2);
+  const soundWaveMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uReveal: { value: 0 }
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uReveal;
+      varying vec2 vUv;
+      void main() {
+        float r = length(vUv - 0.5) * 2.0;
+        float w1 = fract(uTime * 0.42);
+        float w2 = fract(uTime * 0.42 + 0.5);
+        float ring1 = smoothstep(0.045, 0.0, abs(r - w1)) * (1.0 - w1);
+        float ring2 = smoothstep(0.045, 0.0, abs(r - w2)) * (1.0 - w2);
+        float fade = smoothstep(1.0, 0.35, r);
+        float a = (ring1 + ring2) * fade * 0.72 * uReveal;
+        gl_FragColor = vec4(1.0, 0.82, 0.36, a);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+  const soundWave = new THREE.Mesh(soundWaveGeo, soundWaveMat);
+  soundWave.position.set(0, 0.06, 0);
+  bellStand.add(soundWave);
+  stage.add(bellStand);
+
+  lanternLightA.position.set(-0.05, 0.16, 0.04);
   lanternLightB.position.set(0.21, 0.09, 0.16);
 
   /* =========================================================================
@@ -845,10 +1006,26 @@ export function createJapaneseCultureExperience(THREE) {
     pondMat.uniforms.uReveal.value = rev;
     moonMat.uniforms.uTime.value = elapsed;
     moonMat.uniforms.uReveal.value = rev;
+    soundWaveMat.uniforms.uTime.value = elapsed;
+    soundWaveMat.uniforms.uReveal.value = rev;
     petalMat.uniforms.uTime.value = elapsed;
     petalMat.uniforms.uReveal.value = rev;
     emberMat.uniforms.uTime.value = elapsed;
     emberMat.uniforms.uReveal.value = rev;
+
+    bellPivot.rotation.z = Math.sin(elapsed * 1.9) * 0.06;
+
+    for (const koi of koiList) {
+      const { tail, radius, speed, phase } = koi.userData;
+      const ang = elapsed * speed + phase;
+      koi.position.set(
+        Math.cos(ang) * radius,
+        0.005,
+        0.06 + Math.sin(ang) * (radius * 0.78)
+      );
+      koi.rotation.y = speed > 0 ? -ang : -ang + Math.PI;
+      tail.rotation.y = Math.sin(elapsed * 8.0 + phase) * 0.35;
+    }
 
     // Balanceo suave de sakura, bambu y faroles
     sakuraGroup.rotation.z = Math.sin(elapsed * 0.9) * 0.018;
