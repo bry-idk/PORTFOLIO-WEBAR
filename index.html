@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Test WebAR — Brayan Marín</title>
+  <!-- Cargamos Three.js y MindAR de forma clásica (cero conflictos de importmap en móvil) -->
+  <script src="https://unpkg.com/three@0.147.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
   <style>
     * { box-sizing: border-box; }
     html, body {
@@ -13,7 +16,6 @@
     #container {
       width: 100vw; height: 100vh; position: fixed; top: 0; left: 0;
     }
-    /* Asegura que el video de la cámara y el canvas 3D se vean bien */
     #container video, #container canvas {
       position: absolute !important;
       top: 0 !important; left: 0 !important;
@@ -26,25 +28,17 @@
       background: #0a0a0a; color: #fff; text-align: center; padding: 24px;
     }
     #start-btn {
-      background: #00ff88; color: #000; border: none; padding: 14px 28px;
+      background: #00ff88; color: #000; border: none; padding: 16px 32px;
       font-size: 15px; font-weight: bold; border-radius: 30px; cursor: pointer;
       letter-spacing: 1px; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
     }
     #hud {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.85); color: #00ff88; padding: 10px 18px;
-      border-radius: 20px; font-size: 13px; letter-spacing: 1px; z-index: 15;
+      border-radius: 20px; font-size: 13px; letter-spacing: 1px; z-index: 25;
       text-align: center; max-width: 90vw;
     }
   </style>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
-      }
-    }
-  </script>
 </head>
 <body>
   <div id="start-screen">
@@ -52,22 +46,28 @@
     <button id="start-btn">ACTIVAR CÁMARA</button>
   </div>
 
-  <div id="hud">PRESIONA ACTIVAR CÁMARA</div>
+  <div id="hud">LISTO PARA INICIAR</div>
   <div id="container"></div>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { MindARThree } from 'mindar-image-three';
-
+  <script>
     const hud = document.getElementById('hud');
     const startScreen = document.getElementById('start-screen');
     const startBtn = document.getElementById('start-btn');
 
+    // Detector global de errores visible en pantalla
+    window.onerror = function(msg) {
+      hud.style.color = '#ff4444';
+      hud.textContent = 'ERR: ' + msg;
+    };
+
     startBtn.addEventListener('click', async () => {
       startScreen.style.display = 'none';
-      hud.textContent = 'INICIANDO CÁMARA Y TARGETS...';
+      hud.textContent = 'PIDIENDO PERMISO DE CÁMARA...';
 
       try {
+        const THREE = window.THREE;
+        const MindARThree = window.MINDAR.IMAGE.MindARThree;
+
         const mindarThree = new MindARThree({
           container: document.querySelector('#container'),
           imageTargetSrc: './targets.mind',
@@ -108,7 +108,6 @@
           renderer.render(scene, camera);
         });
       } catch (err) {
-        console.error(err);
         hud.style.color = '#ff4444';
         hud.textContent = 'ERROR: ' + (err.message || err);
       }
