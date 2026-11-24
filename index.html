@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test WebAR — Brayan Marín</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    #container { width: 100vw; height: 100vh; position: relative; }
+    #hud {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8); color: #00ff88; padding: 10px 18px;
+      border-radius: 20px; font-size: 13px; letter-spacing: 1px; z-index: 10;
+      white-space: nowrap;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="hud">APUNTA AL TARGET 1 O TARGET 2</div>
+  <div id="container"></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { MindARThree } from 'mindar-image-three';
+
+    const hud = document.getElementById('hud');
+
+    const mindarThree = new MindARThree({
+      container: document.querySelector('#container'),
+      imageTargetSrc: './targets.mind',
+      maxTrack: 1
+    });
+
+    const { renderer, scene, camera } = mindarThree;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.5));
+
+    // Target 0: Crónicas de Palenque (Cubo Naranja)
+    const anchor0 = mindarThree.addAnchor(0);
+    const cube0 = new THREE.Mesh(
+      new THREE.BoxGeometry(0.45, 0.45, 0.45),
+      new THREE.MeshStandardMaterial({ color: 0xff8800, roughness: 0.3 })
+    );
+    cube0.position.set(0, 0, 0.25);
+    anchor0.group.add(cube0);
+    anchor0.onTargetFound = () => { hud.textContent = 'DETECTADO: TARGET 1 (PALENQUE)'; };
+    anchor0.onTargetLost = () => { hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2'; };
+
+    // Target 1: Kane no Hibiki (Cubo Magenta)
+    const anchor1 = mindarThree.addAnchor(1);
+    const cube1 = new THREE.Mesh(
+      new THREE.BoxGeometry(0.45, 0.45, 0.45),
+      new THREE.MeshStandardMaterial({ color: 0xff0066, roughness: 0.3 })
+    );
+    cube1.position.set(0, 0, 0.25);
+    anchor1.group.add(cube1);
+    anchor1.onTargetFound = () => { hud.textContent = 'DETECTADO: TARGET 2 (KANE NO HIBIKI)'; };
+    anchor1.onTargetLost = () => { hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2'; };
+
+    const start = async () => {
+      await mindarThree.start();
+      renderer.setAnimationLoop(() => {
+        cube0.rotation.y += 0.02;
+        cube1.rotation.y -= 0.02;
+        renderer.render(scene, camera);
+      });
+    };
+    start();
+  </script>
+</body>
+</html>
