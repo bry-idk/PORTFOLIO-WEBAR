@@ -2,16 +2,39 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Test WebAR — Brayan Marín</title>
   <style>
-    body { margin: 0; overflow: hidden; font-family: sans-serif; }
-    #container { width: 100vw; height: 100vh; position: relative; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; background: #0a0a0a; font-family: sans-serif;
+    }
+    #container {
+      width: 100vw; height: 100vh; position: fixed; top: 0; left: 0;
+    }
+    /* Asegura que el video de la cámara y el canvas 3D se vean bien */
+    #container video, #container canvas {
+      position: absolute !important;
+      top: 0 !important; left: 0 !important;
+      width: 100% !important; height: 100% !important;
+      object-fit: cover !important;
+    }
+    #start-screen {
+      position: fixed; inset: 0; z-index: 20;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #0a0a0a; color: #fff; text-align: center; padding: 24px;
+    }
+    #start-btn {
+      background: #00ff88; color: #000; border: none; padding: 14px 28px;
+      font-size: 15px; font-weight: bold; border-radius: 30px; cursor: pointer;
+      letter-spacing: 1px; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
     #hud {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8); color: #00ff88; padding: 10px 18px;
-      border-radius: 20px; font-size: 13px; letter-spacing: 1px; z-index: 10;
-      white-space: nowrap;
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85); color: #00ff88; padding: 10px 18px;
+      border-radius: 20px; font-size: 13px; letter-spacing: 1px; z-index: 15;
+      text-align: center; max-width: 90vw;
     }
   </style>
   <script type="importmap">
@@ -24,7 +47,12 @@
   </script>
 </head>
 <body>
-  <div id="hud">APUNTA AL TARGET 1 O TARGET 2</div>
+  <div id="start-screen">
+    <p style="margin-bottom: 18px; opacity: 0.8; font-size: 14px;">BRAYAN MARÍN — PORTFOLIO AR</p>
+    <button id="start-btn">ACTIVAR CÁMARA</button>
+  </div>
+
+  <div id="hud">PRESIONA ACTIVAR CÁMARA</div>
   <div id="container"></div>
 
   <script type="module">
@@ -32,47 +60,59 @@
     import { MindARThree } from 'mindar-image-three';
 
     const hud = document.getElementById('hud');
+    const startScreen = document.getElementById('start-screen');
+    const startBtn = document.getElementById('start-btn');
 
-    const mindarThree = new MindARThree({
-      container: document.querySelector('#container'),
-      imageTargetSrc: './targets.mind',
-      maxTrack: 1
+    startBtn.addEventListener('click', async () => {
+      startScreen.style.display = 'none';
+      hud.textContent = 'INICIANDO CÁMARA Y TARGETS...';
+
+      try {
+        const mindarThree = new MindARThree({
+          container: document.querySelector('#container'),
+          imageTargetSrc: './targets.mind',
+          maxTrack: 1
+        });
+
+        const { renderer, scene, camera } = mindarThree;
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.5));
+
+        // Target 0: Crónicas de Palenque (Cubo Naranja)
+        const anchor0 = mindarThree.addAnchor(0);
+        const cube0 = new THREE.Mesh(
+          new THREE.BoxGeometry(0.45, 0.45, 0.45),
+          new THREE.MeshStandardMaterial({ color: 0xff8800, roughness: 0.3 })
+        );
+        cube0.position.set(0, 0, 0.25);
+        anchor0.group.add(cube0);
+        anchor0.onTargetFound = () => { hud.textContent = 'DETECTADO: TARGET 1 (PALENQUE)'; };
+        anchor0.onTargetLost = () => { hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2'; };
+
+        // Target 1: Kane no Hibiki (Cubo Magenta)
+        const anchor1 = mindarThree.addAnchor(1);
+        const cube1 = new THREE.Mesh(
+          new THREE.BoxGeometry(0.45, 0.45, 0.45),
+          new THREE.MeshStandardMaterial({ color: 0xff0066, roughness: 0.3 })
+        );
+        cube1.position.set(0, 0, 0.25);
+        anchor1.group.add(cube1);
+        anchor1.onTargetFound = () => { hud.textContent = 'DETECTADO: TARGET 2 (KANE NO HIBIKI)'; };
+        anchor1.onTargetLost = () => { hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2'; };
+
+        await mindarThree.start();
+        hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2';
+
+        renderer.setAnimationLoop(() => {
+          cube0.rotation.y += 0.02;
+          cube1.rotation.y -= 0.02;
+          renderer.render(scene, camera);
+        });
+      } catch (err) {
+        console.error(err);
+        hud.style.color = '#ff4444';
+        hud.textContent = 'ERROR: ' + (err.message || err);
+      }
     });
-
-    const { renderer, scene, camera } = mindarThree;
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.5));
-
-    // Target 0: Crónicas de Palenque (Cubo Naranja)
-    const anchor0 = mindarThree.addAnchor(0);
-    const cube0 = new THREE.Mesh(
-      new THREE.BoxGeometry(0.45, 0.45, 0.45),
-      new THREE.MeshStandardMaterial({ color: 0xff8800, roughness: 0.3 })
-    );
-    cube0.position.set(0, 0, 0.25);
-    anchor0.group.add(cube0);
-    anchor0.onTargetFound = () => { hud.textContent = 'DETECTADO: TARGET 1 (PALENQUE)'; };
-    anchor0.onTargetLost = () => { hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2'; };
-
-    // Target 1: Kane no Hibiki (Cubo Magenta)
-    const anchor1 = mindarThree.addAnchor(1);
-    const cube1 = new THREE.Mesh(
-      new THREE.BoxGeometry(0.45, 0.45, 0.45),
-      new THREE.MeshStandardMaterial({ color: 0xff0066, roughness: 0.3 })
-    );
-    cube1.position.set(0, 0, 0.25);
-    anchor1.group.add(cube1);
-    anchor1.onTargetFound = () => { hud.textContent = 'DETECTADO: TARGET 2 (KANE NO HIBIKI)'; };
-    anchor1.onTargetLost = () => { hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2'; };
-
-    const start = async () => {
-      await mindarThree.start();
-      renderer.setAnimationLoop(() => {
-        cube0.rotation.y += 0.02;
-        cube1.rotation.y -= 0.02;
-        renderer.render(scene, camera);
-      });
-    };
-    start();
   </script>
 </body>
 </html>
