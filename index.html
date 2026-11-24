@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Test WebAR — Brayan Marín</title>
-  <!-- Cargamos Three.js y MindAR de forma clásica (cero conflictos de importmap en móvil) -->
-  <script src="https://unpkg.com/three@0.147.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
   <style>
     * { box-sizing: border-box; }
     html, body {
@@ -46,28 +43,24 @@
     <button id="start-btn">ACTIVAR CÁMARA</button>
   </div>
 
-  <div id="hud">LISTO PARA INICIAR</div>
+  <div id="hud">CARGANDO MÓDULOS AR...</div>
   <div id="container"></div>
 
-  <script>
+  <script type="module">
+    import * as THREE from 'https://esm.sh/three@0.158.0';
+    import { MindARThree } from 'https://esm.sh/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
+
     const hud = document.getElementById('hud');
     const startScreen = document.getElementById('start-screen');
     const startBtn = document.getElementById('start-btn');
 
-    // Detector global de errores visible en pantalla
-    window.onerror = function(msg) {
-      hud.style.color = '#ff4444';
-      hud.textContent = 'ERR: ' + msg;
-    };
+    hud.textContent = 'LISTO PARA INICIAR';
 
     startBtn.addEventListener('click', async () => {
       startScreen.style.display = 'none';
       hud.textContent = 'PIDIENDO PERMISO DE CÁMARA...';
 
       try {
-        const THREE = window.THREE;
-        const MindARThree = window.MINDAR.IMAGE.MindARThree;
-
         const mindarThree = new MindARThree({
           container: document.querySelector('#container'),
           imageTargetSrc: './targets.mind',
