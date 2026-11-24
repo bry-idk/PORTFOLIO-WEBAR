@@ -19,7 +19,7 @@ export function createCRTInstallationExperience(THREE) {
   root.name = 'CRTInstallationExperience';
 
   const stage = new THREE.Group();
-  stage.position.set(0, -0.26, 0.30);
+  stage.position.set(0, -0.33, 0.34);
   root.add(stage);
 
   let seed = 9404;
@@ -55,16 +55,16 @@ export function createCRTInstallationExperience(THREE) {
   lights.push(gallerySpot);
 
   // Tres PointLights frente al cluster CRT que parpadean con la señal de las pantallas
-  const crtLightCyan = new THREE.PointLight(0x00e5ff, 0.85, 0.75, 1.8);
-  crtLightCyan.userData.baseIntensity = 0.85;
+  const crtLightCyan = new THREE.PointLight(0x00e5ff, 0.95, 1.05, 1.8);
+  crtLightCyan.userData.baseIntensity = 0.95;
   crtLightCyan.position.set(-0.18, 0.18, 0.24);
 
-  const crtLightMagenta = new THREE.PointLight(0xff2a9d, 0.85, 0.75, 1.8);
-  crtLightMagenta.userData.baseIntensity = 0.85;
+  const crtLightMagenta = new THREE.PointLight(0xff2a9d, 0.95, 1.05, 1.8);
+  crtLightMagenta.userData.baseIntensity = 0.95;
   crtLightMagenta.position.set(0.06, 0.34, 0.20);
 
-  const crtLightGreen = new THREE.PointLight(0x28ff88, 0.75, 0.7, 1.8);
-  crtLightGreen.userData.baseIntensity = 0.75;
+  const crtLightGreen = new THREE.PointLight(0x28ff88, 0.85, 1.05, 1.8);
+  crtLightGreen.userData.baseIntensity = 0.85;
   crtLightGreen.position.set(0.22, 0.14, 0.24);
 
   stage.add(crtLightCyan, crtLightMagenta, crtLightGreen);
@@ -488,9 +488,9 @@ export function createCRTInstallationExperience(THREE) {
   curvedScreenGeo.computeVertexNormals();
 
   const screenMaterials = [];
-  const beamGeo = new THREE.CylinderGeometry(0.125, 0.075, 0.14, 16, 1, true);
+  const beamGeo = new THREE.CylinderGeometry(0.145, 0.075, 0.18, 16, 1, true);
   beamGeo.rotateX(Math.PI / 2);
-  beamGeo.translate(0, 0, 0.07);
+  beamGeo.translate(0, 0, 0.09);
 
   function createScreenBeamMaterial(colorHex) {
     return new THREE.ShaderMaterial({
@@ -620,14 +620,14 @@ export function createCRTInstallationExperience(THREE) {
   /* =========================================================================
      5. PARTICULAS IONIZADAS / ESTATICA FLOTANTE ALREDEDOR DE LOS CRT
   ========================================================================= */
-  const sparkCount = 120;
+  const sparkCount = 195;
   const spPos = new Float32Array(sparkCount * 3);
   const spPhase = new Float32Array(sparkCount);
   const spHue = new Float32Array(sparkCount);
   for (let i = 0; i < sparkCount; i++) {
-    spPos[i * 3] = (rand() - 0.5) * 0.78;
-    spPos[i * 3 + 1] = 0.03 + rand() * 0.44;
-    spPos[i * 3 + 2] = (rand() - 0.5) * 0.45;
+    spPos[i * 3] = (rand() - 0.5) * 1.38;
+    spPos[i * 3 + 1] = 0.02 + rand() * 0.72;
+    spPos[i * 3 + 2] = (rand() - 0.5) * 0.75;
     spPhase[i] = rand() * Math.PI * 2;
     spHue[i] = rand();
   }
@@ -694,8 +694,8 @@ export function createCRTInstallationExperience(THREE) {
 
   function update(dt, elapsed, revealProgress) {
     const rev = easeOutCubic(revealProgress);
-    stage.scale.setScalar(0.76 + 0.24 * rev);
-    stage.position.y = -0.26 - (1 - rev) * 0.05;
+    stage.scale.setScalar((0.76 + 0.24 * rev) * 1.34);
+    stage.position.y = -0.33 - (1 - rev) * 0.06;
 
     for (const mat of screenMaterials) {
       mat.uniforms.uTime.value = elapsed;

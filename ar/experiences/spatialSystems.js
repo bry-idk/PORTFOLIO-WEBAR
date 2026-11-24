@@ -21,7 +21,7 @@ export function createSpatialSystemsExperience(THREE) {
   root.name = 'SpatialSystemsExperience';
 
   const stage = new THREE.Group();
-  stage.position.set(0, 0.0, 0.30);
+  stage.position.set(0, 0.0, 0.34);
   root.add(stage);
 
   let seed = 2026;
@@ -67,7 +67,7 @@ export function createSpatialSystemsExperience(THREE) {
   /* =========================================================================
      2. RETICULA ESPACIAL HOLOGRAFICA EN LA BASE (GLSL)
   ========================================================================= */
-  const gridGeo = new THREE.CircleGeometry(0.42, 64);
+  const gridGeo = new THREE.CircleGeometry(0.54, 64);
   gridGeo.rotateX(-Math.PI / 2);
   const gridMat = new THREE.ShaderMaterial({
     uniforms: {
@@ -489,16 +489,16 @@ export function createSpatialSystemsExperience(THREE) {
   stage.add(traceGroup);
 
   // Pixeles digitales flotantes (instanciados)
-  const pixelCount = 44;
+  const pixelCount = 60;
   const pixelGeo = new THREE.BoxGeometry(0.012, 0.012, 0.012);
   const pixelInst = new THREE.InstancedMesh(pixelGeo, pixelVioletMat, pixelCount);
   const pixelSeeds = [];
   const dummy = new THREE.Object3D();
   for (let i = 0; i < pixelCount; i++) {
     const side = i % 2 === 0 ? -1 : 1;
-    const px = side * (0.24 + rand() * 0.15);
-    const py = (rand() - 0.5) * 0.62;
-    const pz = (rand() - 0.5) * 0.24;
+    const px = side * (0.26 + rand() * 0.26);
+    const py = (rand() - 0.5) * 0.92;
+    const pz = (rand() - 0.5) * 0.42;
     const sc = 0.5 + rand() * 1.1;
     pixelSeeds.push({ px, py, pz, sc, phase: rand() * Math.PI * 2 });
     dummy.position.set(px, py, pz);
@@ -510,18 +510,18 @@ export function createSpatialSystemsExperience(THREE) {
   stage.add(pixelInst);
 
   /* =========================================================================
-     6. CINTA GALACTICA DE PARTICULAS ENVOLVENTE (280 PARTICULAS GLSL)
+     6. CINTA GALACTICA DE PARTICULAS ENVOLVENTE (360 PARTICULAS GLSL)
   ========================================================================= */
-  const ribbonCount = 280;
+  const ribbonCount = 360;
   const rbPhase = new Float32Array(ribbonCount);
   const rbSpread = new Float32Array(ribbonCount * 3);
   const rbColorMix = new Float32Array(ribbonCount);
   const rbDummy = new Float32Array(ribbonCount * 3);
   for (let i = 0; i < ribbonCount; i++) {
     rbPhase[i] = (i / ribbonCount) * Math.PI * 2;
-    rbSpread[i * 3] = (rand() - 0.5) * 0.055;
-    rbSpread[i * 3 + 1] = (rand() - 0.5) * 0.055;
-    rbSpread[i * 3 + 2] = (rand() - 0.5) * 0.055;
+    rbSpread[i * 3] = (rand() - 0.5) * 0.085;
+    rbSpread[i * 3 + 1] = (rand() - 0.5) * 0.085;
+    rbSpread[i * 3 + 2] = (rand() - 0.5) * 0.085;
     rbColorMix[i] = rand();
   }
   const ribbonGeo = new THREE.BufferGeometry();
@@ -546,10 +546,10 @@ export function createSpatialSystemsExperience(THREE) {
       void main() {
         float t = aPhase + uTime * 0.42;
         // Cinta helicoidal inclinada rodeando el monolito (guiño a la estela de target-titulo.png)
-        float rad = 0.25 + 0.08 * sin(t * 2.0);
+        float rad = 0.31 + 0.11 * sin(t * 2.0);
         vec3 p = vec3(
           cos(t) * rad,
-          sin(t * 2.0) * 0.16 + cos(t) * 0.09,
+          sin(t * 2.0) * 0.22 + cos(t) * 0.12,
           sin(t) * rad
         ) + aSpread;
 
@@ -594,7 +594,7 @@ export function createSpatialSystemsExperience(THREE) {
 
   function update(dt, elapsed, revealProgress) {
     const rev = easeOutCubic(revealProgress);
-    stage.scale.setScalar(0.75 + 0.25 * rev);
+    stage.scale.setScalar((0.76 + 0.24 * rev) * 1.34);
 
     gridMat.uniforms.uTime.value = elapsed;
     gridMat.uniforms.uReveal.value = rev;

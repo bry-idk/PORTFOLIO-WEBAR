@@ -556,7 +556,7 @@
       object-fit: cover !important;
     }
 
-    /* Efectos atmosfericos tematicos en la UI segun el target activo */
+    /* Efectos atmosfericos tematicos y viñetado cinematografico en la UI */
     #ar-ui-fx {
       position: fixed;
       inset: 0;
@@ -564,6 +564,24 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.45s ease;
+    }
+
+    #ar-ui-ornaments {
+      position: fixed;
+      inset: 0;
+      z-index: 45;
+      pointer-events: none;
+      color: var(--ar-accent);
+    }
+
+    #ar-ui-particles {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 46;
+      pointer-events: none;
+      display: block;
     }
 
     #ar-layer[data-ar-theme="spatial"] #ar-ui-fx,
@@ -578,40 +596,137 @@
       background:
         repeating-linear-gradient(
           to bottom,
-          rgba(0, 229, 255, 0.03) 0px,
-          rgba(0, 229, 255, 0.03) 1px,
+          rgba(0, 229, 255, 0.04) 0px,
+          rgba(0, 229, 255, 0.04) 1px,
           transparent 1px,
           transparent 3px
         ),
-        radial-gradient(circle at 50% 50%, transparent 56%, rgba(0, 229, 255, 0.14) 86%, rgba(255, 42, 157, 0.2) 100%);
+        radial-gradient(circle at 50% 48%, transparent 40%, rgba(4, 12, 24, 0.42) 74%, rgba(255, 42, 157, 0.28) 92%, rgba(0, 229, 255, 0.24) 100%);
+      box-shadow: inset 0 0 60px rgba(0, 229, 255, 0.16), inset 0 0 110px rgba(2, 4, 10, 0.72);
     }
 
     #ar-layer[data-ar-theme="vessel"] #ar-ui-fx {
       background:
-        radial-gradient(circle at 50% 45%, transparent 52%, rgba(245, 184, 65, 0.12) 82%, rgba(160, 28, 56, 0.28) 100%);
-      box-shadow: inset 0 0 0 1px rgba(245, 184, 65, 0.2);
+        radial-gradient(circle at 50% 46%, transparent 38%, rgba(48, 12, 20, 0.45) 74%, rgba(168, 28, 56, 0.42) 92%, rgba(245, 184, 65, 0.22) 100%);
+      box-shadow: inset 0 0 0 1px rgba(245, 184, 65, 0.28), inset 0 0 90px rgba(18, 4, 8, 0.78);
     }
 
     #ar-layer[data-ar-theme="japanese"] #ar-ui-fx {
       background:
-        radial-gradient(circle at 50% 15%, rgba(255, 59, 127, 0.18) 0%, transparent 58%),
-        radial-gradient(circle at 50% 50%, transparent 58%, rgba(20, 8, 22, 0.42) 100%);
+        radial-gradient(circle at 50% 16%, rgba(255, 59, 127, 0.24) 0%, transparent 56%),
+        radial-gradient(circle at 50% 48%, transparent 40%, rgba(24, 6, 20, 0.50) 78%, rgba(10, 4, 14, 0.80) 100%);
+      box-shadow: inset 0 0 70px rgba(255, 59, 127, 0.16);
     }
 
     #ar-layer[data-ar-theme="forest"] #ar-ui-fx {
       background:
-        radial-gradient(circle at 18% 12%, rgba(255, 209, 102, 0.2) 0%, transparent 48%),
-        radial-gradient(circle at 80% 85%, rgba(74, 222, 128, 0.14) 0%, transparent 52%);
+        radial-gradient(circle at 16% 12%, rgba(255, 209, 102, 0.28) 0%, transparent 48%),
+        radial-gradient(circle at 82% 86%, rgba(74, 222, 128, 0.20) 0%, transparent 52%),
+        radial-gradient(circle at 50% 50%, transparent 42%, rgba(5, 18, 12, 0.62) 86%, rgba(3, 10, 6, 0.85) 100%);
+      box-shadow: inset 0 0 80px rgba(16, 48, 26, 0.45);
     }
 
     #ar-layer[data-ar-theme="spatial"] #ar-ui-fx {
-      background:
-        radial-gradient(circle at 50% 50%, transparent 58%, rgba(168, 85, 247, 0.16) 86%, rgba(0, 255, 136, 0.12) 100%);
       background-image:
-        radial-gradient(circle at 50% 50%, transparent 58%, rgba(168, 85, 247, 0.16) 86%, rgba(0, 255, 136, 0.12) 100%),
-        linear-gradient(rgba(168, 85, 247, 0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(168, 85, 247, 0.04) 1px, transparent 1px);
-      background-size: 100% 100%, 38px 38px, 38px 38px;
+        radial-gradient(circle at 50% 48%, transparent 40%, rgba(20, 8, 42, 0.50) 76%, rgba(168, 85, 247, 0.24) 93%, rgba(0, 255, 136, 0.16) 100%),
+        linear-gradient(rgba(168, 85, 247, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168, 85, 247, 0.045) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      box-shadow: inset 0 0 90px rgba(12, 4, 28, 0.72);
+    }
+
+    /* Ornamentos vectoriales y etiquetas en los contornos de la UI */
+    .ui-ornament {
+      position: absolute;
+      width: clamp(64px, 16vw, 106px);
+      height: auto;
+      opacity: 0.84;
+      filter: drop-shadow(0 0 10px color-mix(in srgb, var(--ar-accent) 45%, transparent));
+    }
+
+    .orn-tl { top: calc(max(10px, env(safe-area-inset-top)) + 58px); left: 8px; }
+    .orn-tr { top: calc(max(10px, env(safe-area-inset-top)) + 58px); right: 8px; }
+    #ar-layer.is-preview .orn-tl,
+    #ar-layer.is-preview .orn-tr { top: calc(max(10px, env(safe-area-inset-top)) + 102px); }
+    .orn-bl { bottom: calc(max(10px, env(safe-area-inset-bottom)) + 52px); left: 8px; }
+    .orn-br { bottom: calc(max(10px, env(safe-area-inset-bottom)) + 52px); right: 8px; }
+
+    .orn-sway { animation: ornamentSway 5.5s ease-in-out infinite; transform-origin: top left; }
+    .orn-sway-alt { animation: ornamentSway 6.2s ease-in-out infinite reverse; transform-origin: top right; }
+    .orn-twinkle { animation: starTwinkle 4.2s ease-in-out infinite; }
+
+    @keyframes ornamentSway {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(2.5deg) scale(1.03); }
+    }
+
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0.72; }
+      50% { opacity: 1; }
+    }
+
+    .ui-side-tag {
+      position: absolute;
+      top: 50%;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ar-accent);
+      opacity: 0.56;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .side-left {
+      left: 8px;
+      transform: translateY(-50%) rotate(180deg);
+    }
+
+    .side-right {
+      right: 8px;
+      transform: translateY(-50%);
+    }
+
+    .ui-kanji-tag {
+      font-size: 10.5px;
+      letter-spacing: 0.24em;
+      opacity: 0.72;
+    }
+
+    .ui-crt-rec {
+      position: absolute;
+      top: calc(max(14px, env(safe-area-inset-top)) + 60px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.14em;
+      color: #ff4488;
+      opacity: 0.88;
+      white-space: nowrap;
+    }
+
+    #ar-layer.is-preview .ui-crt-rec {
+      top: calc(max(14px, env(safe-area-inset-top)) + 108px);
+    }
+
+    .rec-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ff2a6d;
+      box-shadow: 0 0 10px #ff2a6d;
+      animation: recBlink 1.3s steps(2, start) infinite;
+    }
+
+    @keyframes recBlink {
+      to { opacity: 0.2; }
     }
 
     .ar-topbar {
@@ -898,14 +1013,12 @@
     .hud-project-title {
       margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(14px, 3.8vw, 17px);
+      font-size: clamp(13px, 3.6vw, 17px);
+      line-height: 1.12;
       font-weight: 800;
       letter-spacing: 0.02em;
       text-transform: uppercase;
       color: var(--ink);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .hud-project-teaser {
@@ -1066,7 +1179,8 @@
 
     /* Accesibilidad: reducir movimiento */
     @media (prefers-reduced-motion: reduce) {
-      .status-dot, #ar-reticle::after, .hud-project-title, #ar-project-card::before { animation: none; }
+      .status-dot, #ar-reticle::after, .hud-project-title, #ar-project-card::before,
+      .orn-sway, .orn-sway-alt, .orn-twinkle, .rec-dot { animation: none; }
       .cta-btn, #landing-ui, #ar-layer, #ar-reticle, #ar-ui-fx { transition: none; }
     }
   </style>
@@ -1156,6 +1270,8 @@
   <section id="ar-layer" data-ar-theme="idle" aria-label="Experiencia de Realidad Aumentada" aria-hidden="true">
     <div id="ar-container"></div>
     <div id="ar-ui-fx" aria-hidden="true"></div>
+    <div id="ar-ui-ornaments" aria-hidden="true"></div>
+    <canvas id="ar-ui-particles" aria-hidden="true"></canvas>
 
     <div class="ar-topbar">
       <button id="btn-exit-ar" class="ar-exit-btn" type="button">← VOLVER</button>
@@ -1536,10 +1652,13 @@
        3. INTEGRACIÓN REAL DE WEBAR (MindAR + Three.js con ./targets.mind)
     ========================================================================= */
     import { TARGET_MANIFEST, mountARExperiences, mountPreviewExperience } from './ar/index.js';
+    import { createUIEffectsController, getThemeOrnamentHTML } from './ar/uiFx.js';
 
     const landingUI = document.getElementById('landing-ui');
     const arLayer = document.getElementById('ar-layer');
     const arContainer = document.getElementById('ar-container');
+    const arUiOrnaments = document.getElementById('ar-ui-ornaments');
+    const arUiParticlesCanvas = document.getElementById('ar-ui-particles');
     const arHudDock = document.getElementById('ar-hud-dock');
     const arHudStatus = document.getElementById('ar-hud-status');
     const hudProjectSub = document.getElementById('hud-project-sub');
@@ -1570,6 +1689,7 @@
     let activeARSession = null;
     let MindARThreeClass = null;
     let activeEntry = null;
+    const uiParticles = createUIEffectsController(arUiParticlesCanvas);
 
     function applyTheme(entry) {
       if (!entry) {
@@ -1577,6 +1697,8 @@
         arLayer.style.setProperty('--ar-accent', '#00ff88');
         arLayer.style.setProperty('--ar-secondary', '#7c3aed');
         arHudDock.classList.remove('has-project');
+        arUiOrnaments.innerHTML = '';
+        uiParticles.setTheme('idle');
         activeEntry = null;
         return;
       }
@@ -1588,6 +1710,8 @@
       hudProjectSub.textContent = entry.subtitle;
       hudProjectTitle.textContent = entry.title;
       hudProjectTeaser.textContent = entry.teaser;
+      arUiOrnaments.innerHTML = getThemeOrnamentHTML(entry.theme);
+      uiParticles.setTheme(entry.theme);
       arHudDock.classList.add('has-project');
     }
 

@@ -20,7 +20,7 @@ export function createFantasyForestExperience(THREE) {
   root.name = 'FantasyForestExperience';
 
   const stage = new THREE.Group();
-  stage.position.set(0, -0.27, 0.30);
+  stage.position.set(0, -0.34, 0.34);
   root.add(stage);
 
   // Semilla deterministica para composicion reproducible y equilibrada
@@ -734,7 +734,7 @@ export function createFantasyForestExperience(THREE) {
   /* =========================================================================
      5. GOD RAYS VOLUMETRICOS (GLSL ADITIVO ANIMADO)
   ========================================================================= */
-  const godRayGeo = new THREE.PlaneGeometry(0.32, 0.76, 1, 1);
+  const godRayGeo = new THREE.PlaneGeometry(0.42, 1.02, 1, 1);
   const godRayMat = new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
@@ -821,7 +821,7 @@ export function createFantasyForestExperience(THREE) {
   /* =========================================================================
      6. NIEBLA AMBIENTAL LOCAL (SHADERS CON VIGNETTE RADIAL)
   ========================================================================= */
-  const mistGeo = new THREE.PlaneGeometry(0.92, 0.92);
+  const mistGeo = new THREE.PlaneGeometry(1.42, 1.42);
   mistGeo.rotateX(-Math.PI / 2);
   const mistMat = new THREE.ShaderMaterial({
     uniforms: {
@@ -872,19 +872,19 @@ export function createFantasyForestExperience(THREE) {
   /* =========================================================================
      7. LUCIERNAGAS Y ESPORAS / POLEN FLOTANTE (GLSL POINTS)
   ========================================================================= */
-  const fireflyCount = 64;
+  const fireflyCount = 96;
   const ffPos = new Float32Array(fireflyCount * 3);
   const ffPhase = new Float32Array(fireflyCount);
   const ffSize = new Float32Array(fireflyCount);
   const ffHue = new Float32Array(fireflyCount);
   for (let i = 0; i < fireflyCount; i++) {
     const a = rand() * Math.PI * 2;
-    const rad = 0.04 + Math.sqrt(rand()) * 0.38;
+    const rad = 0.05 + Math.sqrt(rand()) * 0.72;
     ffPos[i * 3] = Math.cos(a) * rad;
-    ffPos[i * 3 + 1] = 0.04 + rand() * 0.34;
+    ffPos[i * 3 + 1] = 0.03 + rand() * 0.56;
     ffPos[i * 3 + 2] = Math.sin(a) * rad;
     ffPhase[i] = rand() * Math.PI * 2;
-    ffSize[i] = 0.7 + rand() * 1.3;
+    ffSize[i] = 0.75 + rand() * 1.45;
     ffHue[i] = rand();
   }
   const ffGeo = new THREE.BufferGeometry();
@@ -945,13 +945,13 @@ export function createFantasyForestExperience(THREE) {
   stage.add(fireflies);
 
   // Esporas / polen flotando en los haces de luz
-  const pollenCount = 150;
+  const pollenCount = 220;
   const polPos = new Float32Array(pollenCount * 3);
   const polPhase = new Float32Array(pollenCount);
   for (let i = 0; i < pollenCount; i++) {
-    polPos[i * 3] = (rand() - 0.5) * 0.75;
-    polPos[i * 3 + 1] = 0.02 + rand() * 0.44;
-    polPos[i * 3 + 2] = (rand() - 0.5) * 0.72;
+    polPos[i * 3] = (rand() - 0.5) * 1.35;
+    polPos[i * 3 + 1] = 0.02 + rand() * 0.66;
+    polPos[i * 3 + 2] = (rand() - 0.5) * 1.10;
     polPhase[i] = rand() * Math.PI * 2;
   }
   const polGeo = new THREE.BufferGeometry();
@@ -970,7 +970,7 @@ export function createFantasyForestExperience(THREE) {
 
       void main() {
         vec3 p = position;
-        p.y = mod(p.y + uTime * 0.028 + aPhase * 0.05, 0.46) + 0.02;
+        p.y = mod(p.y + uTime * 0.032 + aPhase * 0.06, 0.68) + 0.02;
         p.x += sin(uTime * 0.5 + aPhase) * 0.025;
         p.z += cos(uTime * 0.42 + aPhase * 1.2) * 0.025;
 
@@ -1007,8 +1007,8 @@ export function createFantasyForestExperience(THREE) {
 
   function update(dt, elapsed, revealProgress) {
     const rev = easeOutCubic(revealProgress);
-    stage.scale.setScalar(0.75 + 0.25 * rev);
-    stage.position.y = -0.27 - (1 - rev) * 0.05;
+    stage.scale.setScalar((0.76 + 0.24 * rev) * 1.36);
+    stage.position.y = -0.34 - (1 - rev) * 0.06;
 
     windUniform.value = elapsed;
     godRayMat.uniforms.uTime.value = elapsed;

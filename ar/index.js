@@ -211,15 +211,20 @@ export async function mountPreviewExperience(container, THREE, targetIndex, call
   const width = container.clientWidth || window.innerWidth;
   const height = container.clientHeight || window.innerHeight;
   const camera = new THREE.PerspectiveCamera(42, width / height, 0.05, 30);
-  camera.position.set(0.34, 0.27, 1.50);
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.55;
-  controls.target.set(0, -0.02, 0.28);
-  controls.update();
+
+  function applyResponsiveCameraPose() {
+    const portraitDist = camera.aspect < 0.85 ? 0.32 + (1.88 * 0.85) / Math.max(camera.aspect, 0.44) : 1.98;
+    camera.position.set(0.42, 0.34, Math.min(3.15, portraitDist));
+    controls.target.set(0, -0.02, 0.32);
+    controls.update();
+  }
+  applyResponsiveCameraPose();
 
   // Detener auto-rotacion cuando el usuario toma control manual
   const onControlsStart = () => {
@@ -266,9 +271,7 @@ export async function mountPreviewExperience(container, THREE, targetIndex, call
 
     reveal = 0;
     controls.autoRotate = true;
-    camera.position.set(0.34, 0.27, 1.50);
-    controls.target.set(0, -0.02, 0.28);
-    controls.update();
+    applyResponsiveCameraPose();
 
     if (callbacks.onTargetFound) callbacks.onTargetFound(entry);
   }

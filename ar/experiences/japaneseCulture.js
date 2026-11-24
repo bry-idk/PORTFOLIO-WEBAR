@@ -19,7 +19,7 @@ export function createJapaneseCultureExperience(THREE) {
   root.name = 'JapaneseCultureExperience';
 
   const stage = new THREE.Group();
-  stage.position.set(0, -0.27, 0.30);
+  stage.position.set(0, -0.34, 0.34);
   root.add(stage);
 
   let seed = 4207;
@@ -274,7 +274,7 @@ export function createJapaneseCultureExperience(THREE) {
   /* =========================================================================
      3. DISCO LUNAR/SOLAR CARMESI CON ONDAS SEIGAIHA (GLSL)
   ========================================================================= */
-  const moonGeo = new THREE.CircleGeometry(0.24, 48);
+  const moonGeo = new THREE.CircleGeometry(0.28, 48);
   const moonMat = new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
@@ -867,16 +867,16 @@ export function createJapaneseCultureExperience(THREE) {
   /* =========================================================================
      8. PETALOS DE SAKURA FLOTANTES & CHISPAS ESPIRITUALES (GLSL)
   ========================================================================= */
-  const petalCount = 170;
+  const petalCount = 240;
   const pPos = new Float32Array(petalCount * 3);
   const pPhase = new Float32Array(petalCount);
   const pSpeed = new Float32Array(petalCount);
   for (let i = 0; i < petalCount; i++) {
-    pPos[i * 3] = (rand() - 0.5) * 0.82;
-    pPos[i * 3 + 1] = rand() * 0.46;
-    pPos[i * 3 + 2] = (rand() - 0.5) * 0.72;
+    pPos[i * 3] = (rand() - 0.5) * 1.44;
+    pPos[i * 3 + 1] = rand() * 0.72;
+    pPos[i * 3 + 2] = (rand() - 0.5) * 1.10;
     pPhase[i] = rand() * Math.PI * 2;
-    pSpeed[i] = 0.6 + rand() * 0.8;
+    pSpeed[i] = 0.6 + rand() * 0.85;
   }
   const petalGeo = new THREE.BufferGeometry();
   petalGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
@@ -897,17 +897,17 @@ export function createJapaneseCultureExperience(THREE) {
 
       void main() {
         vec3 p = position;
-        float t = uTime * 0.11 * aSpeed;
-        p.y = 0.46 - mod(0.46 - p.y + t, 0.45);
-        p.x += sin(uTime * 0.9 * aSpeed + aPhase) * 0.06 + t * 0.25;
-        p.x = mod(p.x + 0.42, 0.84) - 0.42;
-        p.z += cos(uTime * 0.7 * aSpeed + aPhase) * 0.04;
+        float t = uTime * 0.13 * aSpeed;
+        p.y = 0.72 - mod(0.72 - p.y + t, 0.70);
+        p.x += sin(uTime * 0.9 * aSpeed + aPhase) * 0.08 + t * 0.30;
+        p.x = mod(p.x + 0.72, 1.44) - 0.72;
+        p.z += cos(uTime * 0.7 * aSpeed + aPhase) * 0.06;
 
         vec4 mvPos = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mvPos;
-        gl_PointSize = (13.0 + 5.0 * sin(aPhase)) * (1.0 / max(-mvPos.z, 0.35));
+        gl_PointSize = (14.0 + 6.0 * sin(aPhase)) * (1.0 / max(-mvPos.z, 0.35));
         vSpin = uTime * 2.2 * aSpeed + aPhase;
-        vAlpha = smoothstep(0.01, 0.08, p.y) * smoothstep(0.47, 0.38, p.y);
+        vAlpha = smoothstep(0.01, 0.09, p.y) * smoothstep(0.73, 0.56, p.y);
       }
     `,
     fragmentShader: /* glsl */ `
@@ -940,13 +940,13 @@ export function createJapaneseCultureExperience(THREE) {
   stage.add(petals);
 
   // Chispas doradas ascendentes
-  const emberCount = 65;
+  const emberCount = 105;
   const ePos = new Float32Array(emberCount * 3);
   const ePhase = new Float32Array(emberCount);
   for (let i = 0; i < emberCount; i++) {
-    ePos[i * 3] = (rand() - 0.5) * 0.6;
-    ePos[i * 3 + 1] = rand() * 0.36;
-    ePos[i * 3 + 2] = (rand() - 0.5) * 0.55;
+    ePos[i * 3] = (rand() - 0.5) * 1.15;
+    ePos[i * 3 + 1] = rand() * 0.58;
+    ePos[i * 3 + 2] = (rand() - 0.5) * 0.95;
     ePhase[i] = rand() * Math.PI * 2;
   }
   const emberGeo = new THREE.BufferGeometry();
@@ -964,12 +964,12 @@ export function createJapaneseCultureExperience(THREE) {
       varying float vFade;
       void main() {
         vec3 p = position;
-        p.y = mod(p.y + uTime * 0.045 + aPhase * 0.1, 0.42);
-        p.x += sin(uTime * 1.1 + aPhase) * 0.018;
+        p.y = mod(p.y + uTime * 0.055 + aPhase * 0.12, 0.62);
+        p.x += sin(uTime * 1.1 + aPhase) * 0.028;
         vec4 mvPos = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mvPos;
-        gl_PointSize = 10.0 * (1.0 / max(-mvPos.z, 0.35));
-        vFade = sin(p.y / 0.42 * 3.14159265);
+        gl_PointSize = 11.0 * (1.0 / max(-mvPos.z, 0.35));
+        vFade = sin(p.y / 0.62 * 3.14159265);
       }
     `,
     fragmentShader: /* glsl */ `
@@ -999,8 +999,8 @@ export function createJapaneseCultureExperience(THREE) {
 
   function update(dt, elapsed, revealProgress) {
     const rev = easeOutCubic(revealProgress);
-    stage.scale.setScalar(0.76 + 0.24 * rev);
-    stage.position.y = -0.27 - (1 - rev) * 0.05;
+    stage.scale.setScalar((0.76 + 0.24 * rev) * 1.36);
+    stage.position.y = -0.34 - (1 - rev) * 0.06;
 
     pondMat.uniforms.uTime.value = elapsed;
     pondMat.uniforms.uReveal.value = rev;

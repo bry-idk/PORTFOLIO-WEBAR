@@ -19,7 +19,7 @@ export function createCeremonialVesselExperience(THREE) {
   root.name = 'CeremonialVesselExperience';
 
   const stage = new THREE.Group();
-  stage.position.set(0, -0.27, 0.30);
+  stage.position.set(0, -0.34, 0.34);
   root.add(stage);
 
   let seed = 8089;
@@ -484,7 +484,7 @@ export function createCeremonialVesselExperience(THREE) {
   stage.add(plinthRim);
 
   // Halo de contraluz volumetrico borgona-dorado detras de la pieza
-  const backHaloGeo = new THREE.PlaneGeometry(0.56, 0.56);
+  const backHaloGeo = new THREE.PlaneGeometry(0.86, 0.86);
   const backHaloMat = new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
@@ -536,10 +536,10 @@ export function createCeremonialVesselExperience(THREE) {
     const s = new THREE.Mesh(shardGeo, shardMat);
     s.userData = {
       ang: (i / 14) * Math.PI * 2,
-      rad: 0.19 + rand() * 0.09,
-      yBase: 0.12 + rand() * 0.32,
+      rad: 0.21 + rand() * 0.17,
+      yBase: 0.10 + rand() * 0.42,
       speed: (i % 2 === 0 ? 1 : -1) * (0.25 + rand() * 0.25),
-      scale: 0.65 + rand() * 0.75
+      scale: 0.72 + rand() * 0.82
     };
     s.scale.set(s.userData.scale, s.userData.scale * 1.45, s.userData.scale * 0.7);
     stage.add(s);
@@ -590,7 +590,7 @@ export function createCeremonialVesselExperience(THREE) {
   /* =========================================================================
      5. VORTICE DE PARTICULAS INTERACTIVO CON LA SILUETA DE LA VASIJA (GLSL)
   ========================================================================= */
-  const vortexCount = 280;
+  const vortexCount = 330;
   const vxPhase = new Float32Array(vortexCount);
   const vxSeed = new Float32Array(vortexCount * 3);
   const vxDummyPos = new Float32Array(vortexCount * 3);
@@ -663,14 +663,14 @@ export function createCeremonialVesselExperience(THREE) {
   stage.add(vortexParticles);
 
   // Motas ambientales tipo bokeh dorado (referencia a target3.png)
-  const dustCount = 90;
+  const dustCount = 165;
   const dPos = new Float32Array(dustCount * 3);
   const dPhase = new Float32Array(dustCount);
   for (let i = 0; i < dustCount; i++) {
     const a = rand() * Math.PI * 2;
-    const rad = 0.16 + rand() * 0.28;
+    const rad = 0.18 + rand() * 0.50;
     dPos[i * 3] = Math.cos(a) * rad;
-    dPos[i * 3 + 1] = 0.04 + rand() * 0.46;
+    dPos[i * 3 + 1] = 0.04 + rand() * 0.68;
     dPos[i * 3 + 2] = Math.sin(a) * rad;
     dPhase[i] = rand() * Math.PI * 2;
   }
@@ -725,8 +725,8 @@ export function createCeremonialVesselExperience(THREE) {
 
   function update(dt, elapsed, revealProgress) {
     const rev = easeOutCubic(revealProgress);
-    stage.scale.setScalar(0.76 + 0.24 * rev);
-    stage.position.y = -0.27 - (1 - rev) * 0.05;
+    stage.scale.setScalar((0.76 + 0.24 * rev) * 1.36);
+    stage.position.y = -0.34 - (1 - rev) * 0.06;
 
     // Levitacion y rotacion majestuosa de la vasija
     vesselGroup.position.y = 0.068 + Math.sin(elapsed * 1.45) * 0.016;
