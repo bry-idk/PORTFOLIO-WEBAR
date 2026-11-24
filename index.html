@@ -2,8 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Test WebAR — Brayan Marín</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#050607" />
+  <title>BRAYAN MARÍN AMPUDIA — PORTFOLIO 2026</title>
+
+  <!-- Tipografía editorial y técnica -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+
+  <!-- GSAP para coreografía de entrada y transiciones -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+
+  <!-- Import Map probado y estable para Three.js + MindAR en móvil -->
   <script type="importmap">
     {
       "imports": {
@@ -13,115 +24,1021 @@
       }
     }
   </script>
+
   <style>
-    * { box-sizing: border-box; }
+    :root {
+      --bg: #050607;
+      --ink: #f4f6f4;
+      --muted: rgba(244, 246, 244, 0.64);
+      --line: rgba(244, 246, 244, 0.14);
+      --accent: #00ff88;
+      --accent-soft: rgba(0, 255, 136, 0.18);
+      --violet: #7c3aed;
+      --font-display: 'Syne', sans-serif;
+      --font-sans: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      overflow: hidden; background: #0a0a0a; font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
     }
-    #container {
-      width: 100vw; height: 100vh; position: fixed; top: 0; left: 0;
+
+    /* Fallback elegante si el dispositivo no soporta WebGL */
+    body.no-webgl {
+      background:
+        radial-gradient(circle at 20% 25%, rgba(124, 58, 237, 0.35), transparent 55%),
+        radial-gradient(circle at 80% 75%, rgba(0, 255, 136, 0.24), transparent 50%),
+        #050607;
     }
-    #container video, #container canvas {
+
+    /* Canvas WebGL del Hero */
+    #webgl-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      display: block;
+    }
+
+    /* Textura sutil de grano editorial */
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.055;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.8) 0.5px, transparent 0.5px);
+      background-size: 3px 3px;
+    }
+
+    /* Retícula arquitectónica sutil */
+    .grid-frame {
+      position: fixed;
+      inset: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)) 14px;
+      z-index: 3;
+      pointer-events: none;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    /* Capa principal de UI (Mobile-First) */
+    #landing-ui {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: calc(max(14px, env(safe-area-inset-top)) + 18px) 28px calc(max(14px, env(safe-area-inset-bottom)) + 22px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+
+    #landing-ui.is-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.97);
+    }
+
+    /* Header editorial */
+    .top-bar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+    }
+
+    .identity {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .full-name {
+      margin: 0;
+      font-family: var(--font-sans);
+      font-size: clamp(13px, 3.6vw, 17px);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .telemetry {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+      animation: pulse 2.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.8); }
+    }
+
+    /* Composición central protagonista */
+    .hero-center {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      margin: auto 0;
+      will-change: transform;
+    }
+
+    .hero-tag-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .hero-title-wrap {
+      overflow: hidden;
+      padding: 4px 0;
+    }
+
+    .hero-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(2.65rem, 12.6vw, 7.6rem);
+      line-height: 0.88;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      background: linear-gradient(180deg, #ffffff 15%, #c7f9e2 68%, #00ff88 115%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 0 28px rgba(0, 255, 136, 0.18));
+    }
+
+    .hero-title-ghost {
+      margin: -6px 0 0;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(1.1rem, 4.4vw, 2.3rem);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(244, 246, 244, 0.34);
+    }
+
+    .hero-statement {
+      margin: 4px 0 0;
+      max-width: 44ch;
+      font-size: clamp(13px, 3.6vw, 15px);
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    /* Dock de acciones principales */
+    .actions-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+    }
+
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 11px;
+    }
+
+    @media (min-width: 640px) {
+      #landing-ui {
+        padding: 40px 56px;
+      }
+      .grid-frame {
+        inset: 22px;
+      }
+      .btn-group {
+        grid-template-columns: 1fr 1fr;
+        max-width: 560px;
+      }
+    }
+
+    .cta-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+                  box-shadow 0.25s ease,
+                  background-color 0.25s ease,
+                  border-color 0.25s ease;
+    }
+
+    .cta-btn:active {
+      transform: scale(0.97);
+    }
+
+    .cta-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .cta-primary {
+      background: var(--accent);
+      color: #050607;
+      border: 1px solid var(--accent);
+      font-weight: 700;
+      box-shadow: 0 0 32px rgba(0, 255, 136, 0.28);
+    }
+
+    .cta-primary:hover {
+      box-shadow: 0 0 42px rgba(0, 255, 136, 0.48);
+      transform: translateY(-2px);
+    }
+
+    .cta-secondary {
+      background: rgba(12, 14, 16, 0.62);
+      color: var(--ink);
+      border: 1px solid rgba(244, 246, 244, 0.26);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .cta-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(0, 255, 136, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(5, 6, 7, 0.12);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .cta-secondary .btn-icon {
+      background: rgba(244, 246, 244, 0.1);
+    }
+
+    .footer-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: rgba(244, 246, 244, 0.42);
+    }
+
+    /* ================= CAPA DE REALIDAD AUMENTADA (MindAR) ================= */
+    #ar-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: #050607;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    #ar-layer.is-active {
+      display: block;
+      opacity: 1;
+    }
+
+    #ar-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    #ar-container video,
+    #ar-container canvas {
       position: absolute !important;
-      top: 0 !important; left: 0 !important;
-      width: 100% !important; height: 100% !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
       object-fit: cover !important;
     }
-    #start-screen {
-      position: fixed; inset: 0; z-index: 20;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: #0a0a0a; color: #fff; text-align: center; padding: 24px;
+
+    .ar-topbar {
+      position: fixed;
+      top: calc(max(14px, env(safe-area-inset-top)) + 8px);
+      left: 16px;
+      right: 16px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    #start-btn {
-      background: #00ff88; color: #000; border: none; padding: 16px 32px;
-      font-size: 15px; font-weight: bold; border-radius: 30px; cursor: pointer;
-      letter-spacing: 1px; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+
+    .ar-exit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(5, 6, 7, 0.72);
+      color: var(--ink);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
     }
-    #hud {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.85); color: #00ff88; padding: 10px 18px;
-      border-radius: 20px; font-size: 13px; letter-spacing: 1px; z-index: 25;
-      text-align: center; max-width: 90vw;
+
+    .ar-badge {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(5, 6, 7, 0.72);
+      border: 1px solid rgba(0, 255, 136, 0.35);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Retícula minimalista de escaneo AR */
+    #ar-reticle {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: min(68vw, 270px);
+      height: min(68vw, 270px);
+      transform: translate(-50%, -50%);
+      z-index: 45;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    #ar-reticle.is-locked {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .corner {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-color: var(--accent);
+      border-style: solid;
+      border-width: 0;
+      filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.65));
+    }
+    .c-tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; border-top-left-radius: 6px; }
+    .c-tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; border-top-right-radius: 6px; }
+    .c-bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; border-bottom-left-radius: 6px; }
+    .c-br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; border-bottom-right-radius: 6px; }
+
+    #ar-hud {
+      position: fixed;
+      bottom: calc(max(18px, env(safe-area-inset-bottom)) + 14px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      background: rgba(5, 6, 7, 0.84);
+      border: 1px solid rgba(0, 255, 136, 0.35);
+      color: var(--accent);
+      padding: 11px 20px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-align: center;
+      max-width: 90vw;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Accesibilidad: reducir movimiento */
+    @media (prefers-reduced-motion: reduce) {
+      .status-dot { animation: none; }
+      .cta-btn, #landing-ui, #ar-layer, #ar-reticle { transition: none; }
     }
   </style>
 </head>
 <body>
-  <div id="start-screen">
-    <p style="margin-bottom: 18px; opacity: 0.8; font-size: 14px;">BRAYAN MARÍN — PORTFOLIO AR</p>
-    <button id="start-btn">ACTIVAR CÁMARA</button>
-  </div>
 
-  <div id="hud">CARGANDO MÓDULOS AR...</div>
-  <div id="container"></div>
+  <!-- Fondo WebGL con shaders GLSL procedurales -->
+  <canvas id="webgl-canvas" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="grid-frame" aria-hidden="true"></div>
+
+  <!-- Pantalla Principal -->
+  <main id="landing-ui">
+    <header class="top-bar anim-fade">
+      <div class="identity">
+        <span class="eyebrow">Creative Technologist // XR</span>
+        <h1 class="full-name">Brayan Marín Ampudia</h1>
+      </div>
+      <div class="telemetry" aria-label="Estado del sistema">
+        <span class="status-dot"></span>
+        <span>MED • 2026</span>
+      </div>
+    </header>
+
+    <section class="hero-center" id="hero-parallax">
+      <div class="hero-tag-row anim-fade">
+        <span>01 / DIGITAL INTERACTION</span>
+        <span>WEBGL • GLSL • WEBAR</span>
+      </div>
+
+      <div class="hero-title-wrap">
+        <h2 class="hero-title anim-reveal">PORTFOLIO</h2>
+      </div>
+      <p class="hero-title-ghost anim-fade" aria-hidden="true">SPATIAL SYSTEMS</p>
+
+      <p class="hero-statement anim-fade">
+        Instalaciones interactivas, gráficos en tiempo real, videomapping y realidad aumentada donde la presencia física activa narrativas digitales.
+      </p>
+    </section>
+
+    <footer class="actions-wrap anim-fade">
+      <nav class="btn-group" aria-label="Acciones principales">
+        <button id="btn-explore-ar" class="cta-btn cta-primary" type="button">
+          <span>EXPLORE IN AR</span>
+          <span class="btn-icon" aria-hidden="true">◎</span>
+        </button>
+
+        <a
+          id="btn-view-portfolio"
+          class="cta-btn cta-secondary"
+          href="https://www.behance.net/gallery/254153935/PORTFOLIO-DIGITAL-INTERACTION-2026"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span>VIEW PORTFOLIO</span>
+          <span class="btn-icon" aria-hidden="true">↗</span>
+        </a>
+      </nav>
+
+      <div class="footer-meta">
+        <span>TOUCH &amp; MOVE TO DISTORT FIELD</span>
+        <span id="gpu-status">SHADER ONLINE</span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Experiencia WebAR Integrada -->
+  <section id="ar-layer" aria-label="Experiencia de Realidad Aumentada" aria-hidden="true">
+    <div id="ar-container"></div>
+
+    <div class="ar-topbar">
+      <button id="btn-exit-ar" class="ar-exit-btn" type="button">← VOLVER</button>
+      <div class="ar-badge">WEBAR // LIVE</div>
+    </div>
+
+    <div id="ar-reticle" aria-hidden="true">
+      <span class="corner c-tl"></span>
+      <span class="corner c-tr"></span>
+      <span class="corner c-bl"></span>
+      <span class="corner c-br"></span>
+    </div>
+
+    <div id="ar-hud" role="status" aria-live="polite">INICIANDO CÁMARA AR...</div>
+  </section>
 
   <script type="module">
-    const hud = document.getElementById('hud');
-    const startScreen = document.getElementById('start-screen');
-    const startBtn = document.getElementById('start-btn');
+    import * as THREE from 'three';
 
-    let THREE, MindARThree;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const gpuStatus = document.getElementById('gpu-status');
+    const heroParallax = document.getElementById('hero-parallax');
 
-    try {
-      THREE = await import('three');
-      const mindarModule = await import('mindar-image-three');
-      MindARThree = mindarModule.MindARThree;
-      hud.textContent = 'LISTO PARA INICIAR';
-    } catch (e) {
-      hud.style.color = '#ff4444';
-      hud.textContent = 'FALLO AL CARGAR LIBRERÍA: ' + e.message;
+    /* =========================================================================
+       1. MOTOR WEBGL + SHADERS GLSL PERSONALIZADOS (FLUIDO + PARTÍCULAS)
+    ========================================================================= */
+    const canvas = document.getElementById('webgl-canvas');
+    let bgRenderer = null;
+    let bgScene = null;
+    let bgCamera = null;
+    let bgRafId = null;
+    let isLandingActive = true;
+
+    const pointer = new THREE.Vector2(0.5, 0.5);
+    const targetPointer = new THREE.Vector2(0.5, 0.5);
+    let pointerVelocity = 0;
+
+    function initBackgroundWebGL() {
+      try {
+        bgRenderer = new THREE.WebGLRenderer({
+          canvas,
+          antialias: false,
+          alpha: false,
+          powerPreference: 'high-performance'
+        });
+      } catch (err) {
+        document.body.classList.add('no-webgl');
+        canvas.style.display = 'none';
+        gpuStatus.textContent = 'CSS FALLBACK';
+        return;
+      }
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+      bgRenderer.setPixelRatio(dpr);
+      bgRenderer.setSize(window.innerWidth, window.innerHeight);
+
+      bgScene = new THREE.Scene();
+      bgCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      bgCamera.position.z = 3.2;
+
+      /* --- SHADER 1: Campo fluido orgánico con domain warping y refracción cromática --- */
+      const fluidUniforms = {
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2(window.innerWidth * dpr, window.innerHeight * dpr) },
+        uPointer: { value: new THREE.Vector2(0.5, 0.5) },
+        uVelocity: { value: 0 },
+        uReducedMotion: { value: prefersReducedMotion ? 1.0 : 0.0 }
+      };
+
+      const fluidMaterial = new THREE.ShaderMaterial({
+        uniforms: fluidUniforms,
+        depthWrite: false,
+        vertexShader: /* glsl */ `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = vec4(position.xy, 0.0, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          uniform float uTime;
+          uniform vec2 uResolution;
+          uniform vec2 uPointer;
+          uniform float uVelocity;
+          uniform float uReducedMotion;
+          varying vec2 vUv;
+
+          vec2 hash(vec2 p) {
+            p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+            return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+          }
+
+          float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(
+              mix(dot(hash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
+                  dot(hash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
+              mix(dot(hash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
+                  dot(hash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
+              u.y
+            );
+          }
+
+          float fbm(vec2 p) {
+            float v = 0.0;
+            float a = 0.5;
+            mat2 rot = mat2(0.80, 0.60, -0.60, 0.80);
+            for (int i = 0; i < 4; i++) {
+              v += a * noise(p);
+              p = rot * p * 2.03;
+              a *= 0.5;
+            }
+            return v;
+          }
+
+          float field(vec2 p, float t) {
+            vec2 q = vec2(
+              fbm(p + vec2(0.0, t * 0.16)),
+              fbm(p + vec2(4.2, -t * 0.12))
+            );
+            vec2 r = vec2(
+              fbm(p + 3.2 * q + vec2(1.7, 9.2) + 0.14 * t),
+              fbm(p + 3.2 * q + vec2(8.3, 2.8) - 0.11 * t)
+            );
+            return fbm(p + 2.6 * r);
+          }
+
+          void main() {
+            float aspect = uResolution.x / max(uResolution.y, 1.0);
+            vec2 uv = (vUv - 0.5) * vec2(aspect, 1.0);
+            vec2 ptr = (uPointer - 0.5) * vec2(aspect, 1.0);
+
+            float t = uTime * mix(1.0, 0.15, uReducedMotion);
+
+            // Distorsión fluida reactiva al toque/cursor
+            vec2 toPtr = uv - ptr;
+            float dist = length(toPtr);
+            float influence = exp(-dist * 3.2) * (0.14 + uVelocity * 0.45);
+            vec2 warpedUv = uv * 1.55 - normalize(toPtr + 0.0001) * influence;
+
+            // Aberración cromática sutil en el campo procedural
+            float chroma = 0.014 + influence * 0.16;
+            float fR = field(warpedUv + vec2(chroma, 0.0), t);
+            float fG = field(warpedUv, t);
+            float fB = field(warpedUv - vec2(chroma, 0.0), t);
+
+            // Paleta editorial experimental: obsidiana + violeta espacial + verde neón
+            vec3 colObsidian = vec3(0.02, 0.025, 0.032);
+            vec3 colViolet   = vec3(0.16, 0.07, 0.34);
+            vec3 colNeon     = vec3(0.0, 1.0, 0.53);
+            vec3 colSilver   = vec3(0.84, 0.96, 0.91);
+
+            float nR = smoothstep(-0.35, 0.65, fR);
+            float nG = smoothstep(-0.35, 0.65, fG);
+            float nB = smoothstep(-0.35, 0.65, fB);
+
+            vec3 color = colObsidian;
+            color = mix(color, colViolet, smoothstep(0.15, 0.85, nB) * 0.72);
+
+            // Filamentos luminosos de refracción
+            float ridge = 1.0 - abs(fG * 2.2);
+            ridge = pow(clamp(ridge, 0.0, 1.0), 4.0);
+            color += colNeon * ridge * (0.34 + influence * 1.1);
+            color += colSilver * pow(clamp(nR * nG, 0.0, 1.0), 3.0) * 0.22;
+
+            // Halo sutil donde toca el usuario
+            float touchGlow = exp(-dist * 4.5) * 0.22;
+            color += colNeon * touchGlow;
+
+            // Viñeta cinematográfica para legibilidad máxima del texto
+            float vig = smoothstep(1.25, 0.2, length((vUv - 0.5) * vec2(1.15, 1.0)));
+            color *= mix(0.45, 1.0, vig);
+
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      });
+
+      const fluidQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), fluidMaterial);
+      bgScene.add(fluidQuad);
+
+      /* --- SHADER 2: Partículas interactivas en profundidad --- */
+      const particleCount = window.innerWidth < 640 ? 120 : 190;
+      const positions = new Float32Array(particleCount * 3);
+      const scales = new Float32Array(particleCount);
+      const phases = new Float32Array(particleCount);
+
+      for (let i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 4.6;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 5.2;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 2.2;
+        scales[i] = 0.6 + Math.random() * 1.8;
+        phases[i] = Math.random() * Math.PI * 2;
+      }
+
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      pGeo.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+      pGeo.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+
+      const particleUniforms = {
+        uTime: { value: 0 },
+        uPixelRatio: { value: dpr },
+        uPointer: { value: new THREE.Vector2(0, 0) }
+      };
+
+      const particleMat = new THREE.ShaderMaterial({
+        uniforms: particleUniforms,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexShader: /* glsl */ `
+          uniform float uTime;
+          uniform float uPixelRatio;
+          uniform vec2 uPointer;
+          attribute float aScale;
+          attribute float aPhase;
+          varying float vAlpha;
+
+          void main() {
+            vec3 pos = position;
+            pos.y += sin(uTime * 0.45 + aPhase) * 0.18;
+            pos.x += cos(uTime * 0.35 + aPhase * 1.3) * 0.14;
+
+            // Parallax y ligera repulsión ante el puntero
+            vec2 delta = pos.xy - uPointer * 2.1;
+            float d = length(delta);
+            pos.xy += normalize(delta + 0.001) * exp(-d * 1.8) * 0.22;
+
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+            gl_PointSize = aScale * 18.0 * uPixelRatio * (1.0 / max(-mvPosition.z, 0.5));
+            vAlpha = smoothstep(3.5, 0.4, -mvPosition.z) * (0.45 + 0.35 * sin(uTime + aPhase));
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          varying float vAlpha;
+          void main() {
+            float d = length(gl_PointCoord - vec2(0.5));
+            if (d > 0.5) discard;
+            float glow = pow(1.0 - d * 2.0, 2.2);
+            vec3 col = mix(vec3(0.0, 1.0, 0.53), vec3(0.95, 1.0, 0.98), glow);
+            gl_FragColor = vec4(col, glow * vAlpha);
+          }
+        `
+      });
+
+      const particles = new THREE.Points(pGeo, particleMat);
+      bgScene.add(particles);
+
+      /* --- Eventos de interacción (Cursor + Touch + Resize) --- */
+      const updatePointer = (clientX, clientY) => {
+        const nx = clientX / window.innerWidth;
+        const ny = 1.0 - clientY / window.innerHeight;
+        const dx = nx - targetPointer.x;
+        const dy = ny - targetPointer.y;
+        pointerVelocity = Math.min(1.0, pointerVelocity + Math.hypot(dx, dy) * 3.5);
+        targetPointer.set(nx, ny);
+      };
+
+      window.addEventListener('pointermove', (e) => updatePointer(e.clientX, e.clientY), { passive: true });
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 0) {
+          updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      window.addEventListener('resize', () => {
+        if (!bgRenderer) return;
+        const newDpr = Math.min(window.devicePixelRatio || 1, 1.75);
+        bgRenderer.setPixelRatio(newDpr);
+        bgRenderer.setSize(window.innerWidth, window.innerHeight);
+        bgCamera.aspect = window.innerWidth / window.innerHeight;
+        bgCamera.updateProjectionMatrix();
+        fluidUniforms.uResolution.value.set(window.innerWidth * newDpr, window.innerHeight * newDpr);
+        particleUniforms.uPixelRatio.value = newDpr;
+      });
+
+      /* --- Loop de render optimizado --- */
+      const clock = new THREE.Clock();
+
+      const animateBg = () => {
+        if (!isLandingActive) return;
+        bgRafId = requestAnimationFrame(animateBg);
+
+        const elapsed = clock.getElapsedTime();
+        pointer.lerp(targetPointer, 0.08);
+        pointerVelocity *= 0.92;
+
+        fluidUniforms.uTime.value = elapsed;
+        fluidUniforms.uPointer.value.copy(pointer);
+        fluidUniforms.uVelocity.value = pointerVelocity;
+
+        particleUniforms.uTime.value = prefersReducedMotion ? elapsed * 0.15 : elapsed;
+        particleUniforms.uPointer.value.set((pointer.x - 0.5) * 2.0, (pointer.y - 0.5) * 2.0);
+
+        // Parallax sutil de la composición tipográfica
+        if (!prefersReducedMotion && heroParallax) {
+          const px = (pointer.x - 0.5) * -10;
+          const py = (pointer.y - 0.5) * 8;
+          heroParallax.style.transform = `translate3d(${px.toFixed(2)}px, ${py.toFixed(2)}px, 0)`;
+        }
+
+        bgRenderer.render(bgScene, bgCamera);
+      };
+
+      window.__resumeLandingBg = () => {
+        if (!isLandingActive) {
+          isLandingActive = true;
+          canvas.style.display = 'block';
+          animateBg();
+        }
+      };
+
+      window.__pauseLandingBg = () => {
+        isLandingActive = false;
+        if (bgRafId) cancelAnimationFrame(bgRafId);
+        canvas.style.display = 'none';
+      };
+
+      animateBg();
     }
 
-    startBtn.addEventListener('click', async () => {
-      if (!MindARThree) return;
-      startScreen.style.display = 'none';
-      hud.textContent = 'PIDIENDO PERMISO DE CÁMARA...';
+    initBackgroundWebGL();
+
+    /* =========================================================================
+       2. ENTRADA CINEMATOGRÁFICA CON GSAP
+    ========================================================================= */
+    window.addEventListener('DOMContentLoaded', () => {
+      if (prefersReducedMotion || typeof window.gsap === 'undefined') return;
+
+      const tl = window.gsap.timeline({ defaults: { ease: 'expo.out' } });
+      tl.from('.anim-reveal', { yPercent: 115, opacity: 0, duration: 1.25, delay: 0.1 })
+        .from('.anim-fade', { y: 18, opacity: 0, duration: 0.9, stagger: 0.1 }, '-=0.85');
+    });
+
+    /* =========================================================================
+       3. INTEGRACIÓN REAL DE WEBAR (MindAR + Three.js con ./targets.mind)
+    ========================================================================= */
+    const landingUI = document.getElementById('landing-ui');
+    const arLayer = document.getElementById('ar-layer');
+    const arContainer = document.getElementById('ar-container');
+    const arHud = document.getElementById('ar-hud');
+    const arReticle = document.getElementById('ar-reticle');
+    const btnExploreAR = document.getElementById('btn-explore-ar');
+    const btnExitAR = document.getElementById('btn-exit-ar');
+
+    let activeMindAR = null;
+    let MindARThreeClass = null;
+
+    // Constructor de artefactos 3D experimentales (reemplazables por .glb o VideoTexture)
+    function createArtifact(accentHex, coreHex) {
+      const group = new THREE.Group();
+
+      const outerGeo = new THREE.IcosahedronGeometry(0.32, 0);
+      const outerMat = new THREE.MeshBasicMaterial({
+        color: accentHex,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.9
+      });
+      const outerMesh = new THREE.Mesh(outerGeo, outerMat);
+
+      const coreGeo = new THREE.OctahedronGeometry(0.17, 0);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: coreHex,
+        emissive: accentHex,
+        emissiveIntensity: 0.45,
+        roughness: 0.2,
+        metalness: 0.85
+      });
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+
+      group.add(outerMesh, coreMesh);
+      group.position.set(0, 0, 0.28);
+      group.userData = { outerMesh, coreMesh };
+      return group;
+    }
+
+    async function launchAR() {
+      landingUI.classList.add('is-hidden');
+      arLayer.classList.add('is-active');
+      arLayer.setAttribute('aria-hidden', 'false');
+      arReticle.classList.remove('is-locked');
+      arHud.style.color = '#00ff88';
+      arHud.textContent = 'CARGANDO MOTOR WEBAR...';
+
+      // Liberamos la GPU del fondo WebGL mientras corre la cámara AR
+      if (window.__pauseLandingBg) window.__pauseLandingBg();
 
       try {
-        const mindarThree = new MindARThree({
-          container: document.querySelector('#container'),
+        if (!MindARThreeClass) {
+          const mod = await import('mindar-image-three');
+          MindARThreeClass = mod.MindARThree;
+        }
+
+        arContainer.innerHTML = '';
+        arHud.textContent = 'SOLICITANDO CÁMARA...';
+
+        activeMindAR = new MindARThreeClass({
+          container: arContainer,
           imageTargetSrc: './targets.mind',
-          maxTrack: 1
+          maxTrack: 1,
+          uiLoading: 'no',
+          uiScanning: 'no',
+          uiError: 'no'
         });
 
-        const { renderer, scene, camera } = mindarThree;
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x222222, 1.5));
+        const { renderer, scene, camera } = activeMindAR;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-        // Target 0: Crónicas de Palenque (Cubo Naranja)
-        const anchor0 = mindarThree.addAnchor(0);
-        const cube0 = new THREE.Mesh(
-          new THREE.BoxGeometry(0.45, 0.45, 0.45),
-          new THREE.MeshStandardMaterial({ color: 0xff8800, roughness: 0.3 })
-        );
-        cube0.position.set(0, 0, 0.25);
-        anchor0.group.add(cube0);
-        anchor0.onTargetFound = () => { hud.textContent = 'DETECTADO: TARGET 1 (PALENQUE)'; };
-        anchor0.onTargetLost = () => { hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2'; };
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x1a1a2e, 1.8);
+        const dirLight = new THREE.DirectionalLight(0x00ff88, 1.4);
+        dirLight.position.set(1, 2, 3);
+        scene.add(hemiLight, dirLight);
 
-        // Target 1: Kane no Hibiki (Cubo Magenta)
-        const anchor1 = mindarThree.addAnchor(1);
-        const cube1 = new THREE.Mesh(
-          new THREE.BoxGeometry(0.45, 0.45, 0.45),
-          new THREE.MeshStandardMaterial({ color: 0xff0066, roughness: 0.3 })
-        );
-        cube1.position.set(0, 0, 0.25);
-        anchor1.group.add(cube1);
-        anchor1.onTargetFound = () => { hud.textContent = 'DETECTADO: TARGET 2 (KANE NO HIBIKI)'; };
-        anchor1.onTargetLost = () => { hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2'; };
+        // TARGET 0 — CRÓNICAS DE PALENQUE
+        const anchor0 = activeMindAR.addAnchor(0);
+        const artifact0 = createArtifact(0xff9900, 0x221100);
+        anchor0.group.add(artifact0);
+        anchor0.onTargetFound = () => {
+          arReticle.classList.add('is-locked');
+          arHud.textContent = 'ACTIVO // CRÓNICAS DE PALENQUE';
+        };
+        anchor0.onTargetLost = () => {
+          arReticle.classList.remove('is-locked');
+          arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
+        };
 
-        await mindarThree.start();
-        hud.textContent = 'APUNTA AL TARGET 1 O TARGET 2';
+        // TARGET 1 — KANE NO HIBIKI
+        const anchor1 = activeMindAR.addAnchor(1);
+        const artifact1 = createArtifact(0xff1e7a, 0x1b0014);
+        anchor1.group.add(artifact1);
+        anchor1.onTargetFound = () => {
+          arReticle.classList.add('is-locked');
+          arHud.textContent = 'ACTIVO // KANE NO HIBIKI (鐘の響き)';
+        };
+        anchor1.onTargetLost = () => {
+          arReticle.classList.remove('is-locked');
+          arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
+        };
+
+        await activeMindAR.start();
+        arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
 
         renderer.setAnimationLoop(() => {
-          cube0.rotation.y += 0.02;
-          cube1.rotation.y -= 0.02;
+          artifact0.userData.outerMesh.rotation.y += 0.015;
+          artifact0.userData.outerMesh.rotation.x += 0.008;
+          artifact0.userData.coreMesh.rotation.y -= 0.025;
+
+          artifact1.userData.outerMesh.rotation.y -= 0.015;
+          artifact1.userData.outerMesh.rotation.z += 0.009;
+          artifact1.userData.coreMesh.rotation.x += 0.024;
+
           renderer.render(scene, camera);
         });
       } catch (err) {
-        hud.style.color = '#ff4444';
-        hud.textContent = 'ERROR: ' + (err.message || err);
+        console.error(err);
+        arHud.style.color = '#ff5555';
+        arHud.textContent = 'ERROR AR: ' + (err.message || 'PERMISO DENEGADO');
       }
-    });
+    }
+
+    function exitAR() {
+      try {
+        if (activeMindAR) {
+          activeMindAR.renderer.setAnimationLoop(null);
+          activeMindAR.stop();
+          activeMindAR = null;
+        }
+      } catch (e) {
+        console.warn('Error deteniendo MindAR:', e);
+      }
+
+      arContainer.innerHTML = '';
+      arLayer.classList.remove('is-active');
+      arLayer.setAttribute('aria-hidden', 'true');
+      landingUI.classList.remove('is-hidden');
+
+      if (window.__resumeLandingBg) window.__resumeLandingBg();
+    }
+
+    btnExploreAR.addEventListener('click', launchAR);
+    btnExitAR.addEventListener('click', exitAR);
   </script>
 </body>
 </html>
