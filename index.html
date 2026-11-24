@@ -894,43 +894,28 @@
     /* =========================================================================
        3. INTEGRACIÓN REAL DE WEBAR (MindAR + Three.js con ./targets.mind)
     ========================================================================= */
+    import { mountARExperiences, mountPreviewExperience } from './ar/index.js';
+
     const landingUI = document.getElementById('landing-ui');
     const arLayer = document.getElementById('ar-layer');
     const arContainer = document.getElementById('ar-container');
     const arHud = document.getElementById('ar-hud');
+    const arBadge = document.querySelector('.ar-badge');
     const arReticle = document.getElementById('ar-reticle');
     const btnExploreAR = document.getElementById('btn-explore-ar');
     const btnExitAR = document.getElementById('btn-exit-ar');
 
     let activeMindAR = null;
+    let activeARSession = null;
     let MindARThreeClass = null;
 
-    function createArtifact(accentHex, coreHex) {
-      const group = new THREE.Group();
-
-      const outerGeo = new THREE.IcosahedronGeometry(0.32, 0);
-      const outerMat = new THREE.MeshBasicMaterial({
-        color: accentHex,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.9
-      });
-      const outerMesh = new THREE.Mesh(outerGeo, outerMat);
-
-      const coreGeo = new THREE.OctahedronGeometry(0.17, 0);
-      const coreMat = new THREE.MeshStandardMaterial({
-        color: coreHex,
-        emissive: accentHex,
-        emissiveIntensity: 0.45,
-        roughness: 0.2,
-        metalness: 0.85
-      });
-      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-
-      group.add(outerMesh, coreMesh);
-      group.position.set(0, 0, 0.28);
-      group.userData = { outerMesh, coreMesh };
-      return group;
+    function setHudTheme(accentHex = '#00ff88') {
+      arHud.style.color = accentHex;
+      arHud.style.borderColor = accentHex + '66';
+      if (arBadge) {
+        arBadge.style.color = accentHex;
+        arBadge.style.borderColor = accentHex + '66';
+      }
     }
 
     async function launchAR() {
@@ -938,7 +923,7 @@
       arLayer.classList.add('is-active');
       arLayer.setAttribute('aria-hidden', 'false');
       arReticle.classList.remove('is-locked');
-      arHud.style.color = '#00ff88';
+      setHudTheme('#00ff88');
       arHud.textContent = 'CARGANDO MOTOR WEBAR...';
 
       if (window.__pauseLandingBg) window.__pauseLandingBg();
@@ -964,60 +949,65 @@
         const { renderer, scene, camera } = activeMindAR;
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x1a1a2e, 1.8);
-        const dirLight = new THREE.DirectionalLight(0x00ff88, 1.4);
-        dirLight.position.set(1, 2, 3);
-        scene.add(hemiLight, dirLight);
-
-        // TARGET 0 — CRÓNICAS DE PALENQUE
-        const anchor0 = activeMindAR.addAnchor(0);
-        const artifact0 = createArtifact(0xff9900, 0x221100);
-        anchor0.group.add(artifact0);
-        anchor0.onTargetFound = () => {
-          arReticle.classList.add('is-locked');
-          arHud.textContent = 'ACTIVO // CRÓNICAS DE PALENQUE';
-        };
-        anchor0.onTargetLost = () => {
-          arReticle.classList.remove('is-locked');
-          arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
-        };
-
-        // TARGET 1 — KANE NO HIBIKI
-        const anchor1 = activeMindAR.addAnchor(1);
-        const artifact1 = createArtifact(0xff1e7a, 0x1b0014);
-        anchor1.group.add(artifact1);
-        anchor1.onTargetFound = () => {
-          arReticle.classList.add('is-locked');
-          arHud.textContent = 'ACTIVO // KANE NO HIBIKI (鐘の響き)';
-        };
-        anchor1.onTargetLost = () => {
-          arReticle.classList.remove('is-locked');
-          arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
-        };
+        activeARSession = mountARExperiences(activeMindAR, THREE, {
+          onTargetFound: (entry) => {
+            arReticle.classList.add('is-locked');
+            setHudTheme(entry.accent);
+            arHud.textContent = entry.hudTitle;
+          },
+          onTargetLost: () => {
+            arReticle.classList.remove('is-locked');
+            setHudTheme('#00ff88');
+            arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
+          }
+        });
 
         await activeMindAR.start();
         arHud.textContent = 'APUNTA A UN AR TARGET DEL PORTAFOLIO';
 
+        const arClock = new THREE.Clock();
         renderer.setAnimationLoop(() => {
-          artifact0.userData.outerMesh.rotation.y += 0.015;
-          artifact0.userData.outerMesh.rotation.x += 0.008;
-          artifact0.userData.coreMesh.rotation.y -= 0.025;
-
-          artifact1.userData.outerMesh.rotation.y -= 0.015;
-          artifact1.userData.outerMesh.rotation.z += 0.009;
-          artifact1.userData.coreMesh.rotation.x += 0.024;
-
+          const dt = Math.min(arClock.getDelta(), 0.05);
+          const elapsed = arClock.getElapsedTime();
+          if (activeARSession) activeARSession.update(dt, elapsed);
           renderer.render(scene, camera);
         });
       } catch (err) {
         console.error(err);
-        arHud.style.color = '#ff5555';
+        setHudTheme('#ff5555');
         arHud.textContent = 'ERROR AR: ' + (err.message || 'PERMISO DENEGADO');
+      }
+    }
+
+    async function launchPreview(targetIndex) {
+      landingUI.classList.add('is-hidden');
+      arLayer.classList.add('is-active');
+      arLayer.setAttribute('aria-hidden', 'false');
+      arReticle.classList.add('is-locked');
+      if (window.__pauseLandingBg) window.__pauseLandingBg();
+      arContainer.innerHTML = '';
+
+      try {
+        activeARSession = await mountPreviewExperience(arContainer, THREE, targetIndex, {
+          onTargetFound: (entry) => {
+            setHudTheme(entry.accent);
+            arHud.textContent = 'PREVIEW // ' + entry.hudTitle.replace('ACTIVO // ', '');
+            if (arBadge) arBadge.textContent = '3D PREVIEW // T' + entry.index;
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        setHudTheme('#ff5555');
+        arHud.textContent = 'ERROR PREVIEW: ' + (err.message || 'WEBGL ERROR');
       }
     }
 
     function exitAR() {
       try {
+        if (activeARSession) {
+          activeARSession.dispose();
+          activeARSession = null;
+        }
         if (activeMindAR) {
           activeMindAR.renderer.setAnimationLoop(null);
           activeMindAR.stop();
@@ -1031,12 +1021,22 @@
       arLayer.classList.remove('is-active');
       arLayer.setAttribute('aria-hidden', 'true');
       landingUI.classList.remove('is-hidden');
+      setHudTheme('#00ff88');
+      if (arBadge) arBadge.textContent = 'WEBAR // LIVE';
 
       if (window.__resumeLandingBg) window.__resumeLandingBg();
     }
 
     btnExploreAR.addEventListener('click', launchAR);
     btnExitAR.addEventListener('click', exitAR);
+
+    const previewParam = new URLSearchParams(window.location.search).get('preview');
+    if (previewParam !== null) {
+      const idx = Number.parseInt(previewParam, 10);
+      if (Number.isInteger(idx) && idx >= 0 && idx <= 4) {
+        launchPreview(idx);
+      }
+    }
   </script>
 </body>
 </html>
