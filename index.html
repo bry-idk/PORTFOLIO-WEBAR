@@ -1651,8 +1651,8 @@
     /* =========================================================================
        3. INTEGRACIÓN REAL DE WEBAR (MindAR + Three.js con ./targets.mind)
     ========================================================================= */
-    import { TARGET_MANIFEST, mountARExperiences, mountPreviewExperience } from './ar/index.js';
-    import { createUIEffectsController, getThemeOrnamentHTML } from './ar/uiFx.js';
+    import { TARGET_MANIFEST, mountARExperiences, mountPreviewExperience } from './ar/index.js?v=20261126';
+    import { createUIEffectsController, getThemeOrnamentHTML } from './ar/uiFx.js?v=20261126';
 
     const landingUI = document.getElementById('landing-ui');
     const arLayer = document.getElementById('ar-layer');
@@ -1827,7 +1827,7 @@
 
         activeMindAR = new MindARThreeClass({
           container: arContainer,
-          imageTargetSrc: './targets.mind',
+          imageTargetSrc: './targets.mind?v=20261126',
           maxTrack: 1,
           uiLoading: 'no',
           uiScanning: 'no',

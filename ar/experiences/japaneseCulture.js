@@ -6,7 +6,7 @@ import {
 } from '../shared.js';
 
 /**
- * Experiencia AR — Target 2 (Indice 4 en targets.mind)
+ * Experiencia AR — Target 2 (Indice 1 en targets.mind)
  * CULTURA JAPONESA // KANE NO HIBIKI (鐘の響き)
  *
  * Composicion inspirada en arquitectura japonesa tradicional:

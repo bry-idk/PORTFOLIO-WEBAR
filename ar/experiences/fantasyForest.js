@@ -8,7 +8,7 @@ import {
 } from '../shared.js';
 
 /**
- * Experiencia AR — Target 1 (Indice 3 en targets.mind)
+ * Experiencia AR — Target 1 (Indice 2 en targets.mind)
  * BOSQUE FANTASTICO // CRONICAS DE PALENQUE
  *
  * Diorama estilizado con relieve organico, arboles con copas SSS + viento,

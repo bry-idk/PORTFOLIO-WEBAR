@@ -6,7 +6,7 @@ import {
 } from '../shared.js';
 
 /**
- * Experiencia AR — Target 4 (Indice 0 en targets.mind)
+ * Experiencia AR — Target 4 (Indice 3 en targets.mind)
  * CUATRO TELEVISORES CRT // INSTALACION AUDIOVISUAL
  *
  * Instalacion espacial de 4 televisores CRT esculpidos (carcasas moldeadas,
