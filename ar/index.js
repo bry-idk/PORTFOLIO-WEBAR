@@ -8,15 +8,15 @@ import { createCeremonialVesselExperience } from './experiences/ceremonialVessel
 /**
  * Manifiesto oficial de los 5 Image Targets compilados en ./targets.mind
  * (indices binarios verificados contra las dimensiones exactas de cada PNG):
- * 0 -> target-titulo.png (1086 x 1448) : SPATIAL SYSTEMS
- * 1 -> target2.png       (560 x 486)   : KANE NO HIBIKI (鐘の響き)
- * 2 -> target1.png       (556 x 482)   : CRONICAS DE PALENQUE
- * 3 -> target4.png       (808 x 697)   : REMINISCENCIA
- * 4 -> target3.png       (808 x 687)   : VESTIGIO
+ * 0 -> target4.png       (901 x 773)   : REMINISCENCIA
+ * 1 -> target-titulo.png (1086 x 1448) : SPATIAL SYSTEMS
+ * 2 -> target3.png       (808 x 687)   : VESTIGIO
+ * 3 -> target1.png       (556 x 482)   : CRONICAS DE PALENQUE
+ * 4 -> target2.png       (902 x 784)   : KANE NO HIBIKI (鐘の響き)
  */
 export const TARGET_MANIFEST = [
   {
-    index: 0,
+    index: 1,
     id: 'spatial-systems',
     code: '00',
     title: 'SPATIAL SYSTEMS',
@@ -36,7 +36,7 @@ export const TARGET_MANIFEST = [
     create: createSpatialSystemsExperience
   },
   {
-    index: 1,
+    index: 4,
     id: 'kane-no-hibiki',
     code: '01',
     title: 'KANE NO HIBIKI (鐘の響き)',
@@ -52,11 +52,11 @@ export const TARGET_MANIFEST = [
     accent: '#ff3b7f',
     secondary: '#ffd166',
     previewBg: 0x0b050b,
-    aspect: 560 / 486,
+    aspect: 902 / 784,
     create: createJapaneseCultureExperience
   },
   {
-    index: 2,
+    index: 3,
     id: 'cronicas-de-palenque',
     code: '02',
     title: 'CRÓNICAS DE PALENQUE',
@@ -76,7 +76,7 @@ export const TARGET_MANIFEST = [
     create: createFantasyForestExperience
   },
   {
-    index: 3,
+    index: 0,
     id: 'reminiscencia',
     code: '03',
     title: 'REMINISCENCIA',
@@ -92,11 +92,11 @@ export const TARGET_MANIFEST = [
     accent: '#00e5ff',
     secondary: '#ff2a9d',
     previewBg: 0x05080f,
-    aspect: 808 / 697,
+    aspect: 901 / 773,
     create: createCRTInstallationExperience
   },
   {
-    index: 4,
+    index: 2,
     id: 'vestigio',
     code: '04',
     title: 'VESTIGIO',

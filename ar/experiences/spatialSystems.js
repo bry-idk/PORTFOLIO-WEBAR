@@ -8,7 +8,7 @@ import {
 } from '../shared.js';
 
 /**
- * Experiencia AR — Target-Titulo (Indice 0 en targets.mind)
+ * Experiencia AR — Target-Titulo (Indice 1 en targets.mind)
  * SPATIAL SYSTEMS // PORTADA INTERACTIVA 2026
  *
  * Representacion visual del concepto Spatial Systems:

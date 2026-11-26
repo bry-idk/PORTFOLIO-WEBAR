@@ -6,7 +6,7 @@ import {
 } from '../shared.js';
 
 /**
- * Experiencia AR — Target 3 (Indice 4 en targets.mind)
+ * Experiencia AR — Target 3 (Indice 2 en targets.mind)
  * VASIJA CEREMONIAL // ARTEFACTO AUREO
  *
  * Vasija ceremonial tridimensional (LatheGeometry de alta resolucion con grosor real),
